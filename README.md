@@ -28,7 +28,9 @@ The file `setup_cff.py` was obtained with
     edmConfigFromDB --cff --configName /dev/CMSSW_7_1_1/AlternativeTrackingScenarios/GRun_TK1B/V28 --nopaths --services -PrescaleService > setup_cff.py
 
 The files `hltstudy/babymaker/python/run_xxxx.py` are based in confDB paths that were obtained with
+
     hltGetConfiguration /users/manuelf/RA4ucsb/V5 --full --offline --mc --unprescale --process reHLT --globaltag auto:startup_GRun > run_hlt.py
 
 The files `hltstudy/babymaker/python/cfg711/run_hlt_confdb_x.py` were obtained with
-    hltGetConfiguration /users/jaehyeok/RA4ucsb/V5 --full --offline --mc --unprescale --process reHLT --globaltag auto:startup_GRun > run_hlt.py
+
+    hltGetConfiguration /users/jaehyeok/HLTRun2/RA4/V7 --full --offline --mc --unprescale --process reHLT --globaltag auto:startup_GRun > run_hlt.py

@@ -4,6 +4,7 @@
 *.o
 *.d
 .nfs*
+run000000
 
 # Compiled Dynamic libraries
 *.so
