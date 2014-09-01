@@ -6,6 +6,7 @@
 #include <vector>
 #include "TFile.h"
 #include "TBranch.h"
+#include "TMath.h"
 #include "TTree.h"
 #include "TChain.h"
 #include "TString.h"
@@ -19,49 +20,75 @@ using namespace std;
 using std::cout;
 using std::endl;
 
-vector<TString> dirlist(TString folder);
+vector<TString> dirlist(TString folder, TString inname="dir");
 float cross_section(TString file);
 
 void smallntuple(TString folder="/hadoop/cms/store/user/manuelf/HLT/"){
   gErrorIgnoreLevel=kError; // Turns off "no dictionary for class" warnings
-  float onmet, onht;
+  float onmet, onht, weight, wl1ht200, genht;
+  vector<float> genjets_pt, genjets_eta;
+  const float luminosity = 19600;
   TChain chain("Events");
   TTree tree("tree", "tree");
   tree.Branch("onmet", &onmet);
   tree.Branch("onht", &onht);
+  tree.Branch("weight", &weight);
+  tree.Branch("wl1ht200", &wl1ht200);
+  tree.Branch("genht", &genht);
 
-  TString filename, rootfiles;
+  TString filename, rootname, sampledir;
   vector<TString> dirs = dirlist(folder);
-  //for(unsigned idir(0); idir < dirs.size(); idir++){
-  for(unsigned idir(0); idir < 2; idir++){
+  for(unsigned idir(0); idir < dirs.size(); idir++){
+    //for(unsigned idir(0); idir < 3; idir++){
+    sampledir = folder+"/"+dirs[idir];
+    chain.Add(sampledir+"/*.root");
+    long totentries(chain.GetEntries()), totentry(0);
+    chain.Reset();
+    float xsection = cross_section(dirs[idir]);
+
+    vector<TString> rootfiles = dirlist(sampledir, ".root");
+    cout<<endl<<"Adding the "<<rootfiles.size()<<" files in "<<sampledir
+	<<" with "<<totentries<<" entries"<<endl;
     filename = "ntuples/"+dirs[idir]+".root";
     TFile rootfile(filename, "recreate");
-    rootfiles = folder+"/"+dirs[idir]+"/*_80_*.root";
-    chain.Add(rootfiles);
-    chain.SetMakeClass(1);
-    TBranch *b_ht = chain.GetBranch(chain.GetAlias("pf_ht"));
-    TBranch *b_met = chain.GetBranch(chain.GetAlias("met_pt"));
-    b_ht->SetAddress(&onht);
-    b_met->SetAddress(&onmet);
-    chain.SetMakeClass(0);
-    long entries(chain.GetEntries());
-    cout<<endl<<"Added "<<rootfiles<<" with "<<entries<<" entries"<<endl;
-    //entries = 100;
-    for(int entry(0); entry<entries; entry++){
-      if(entry%10000==0) cout<<"Doing entry "<<entry<<" of "<<entries<<endl;
-      b_ht->GetEntry(entry);b_met->GetEntry(entry);
-      if(onht<=0) continue;
-      tree.Fill();
-    }
+    // Using SetMakeClass == 1 can only be done in indivicual TTrees
+    for(unsigned ifile(0); ifile < rootfiles.size(); ifile++){
+      rootname = sampledir+"/"+rootfiles[ifile];
+      chain.Add(rootname);
+      chain.SetMakeClass(1);
+      TBranch *b_ht = chain.GetBranch(chain.GetAlias("pf_ht"));
+      TBranch *b_met = chain.GetBranch(chain.GetAlias("met_pt"));
+      TBranch *b_genjets_pt = chain.GetBranch(chain.GetAlias("genjets_pt"));
+      TBranch *b_genjets_eta = chain.GetBranch(chain.GetAlias("genjets_eta"));
+      b_ht->SetAddress(&onht);
+      b_met->SetAddress(&onmet);
+      b_genjets_pt->SetAddress(&genjets_pt);
+      b_genjets_eta->SetAddress(&genjets_eta);
+      chain.SetMakeClass(0);
+      long entries(chain.GetEntries());
+      for(int entry(0); entry<entries; entry++, totentry++){
+	if((totentry+1)%500000==0) cout<<"Done "<<totentry+1<<" entries"<<endl;
+	b_ht->GetEntry(entry);b_met->GetEntry(entry);
+	b_genjets_pt->GetEntry(entry);b_genjets_eta->GetEntry(entry);
+	if(onht<=0) continue;
+	genht = 0;
+	for(unsigned ijet(0); ijet < genjets_pt.size(); ijet++) 
+	  if(genjets_pt.at(ijet)>40 && genjets_eta.at(ijet)<3) genht += genjets_pt.at(ijet);
+	wl1ht200 = (0.5*TMath::Erf((1.35121e-02)*(genht-(3.02695e+02)))+0.5);
+	weight = wl1ht200*xsection*luminosity / static_cast<double>(totentries);
+	tree.Fill();
+      }
+      chain.Reset(); 
+    } // Loop over files in the sample folder
     tree.Write();
     rootfile.Close();
     cout<<"Written tree "<<filename<<endl;
-    chain.Reset(); tree.Reset();
-  }
+    tree.Reset();
+  } // Loop over sample folders
 }
 
-// Returns list of directorites in folder
-vector<TString> dirlist(TString folder){
+// Returns list of directorites or files in folder
+vector<TString> dirlist(TString folder, TString inname){
   vector<TString> v_dirs;
   TSystemDirectory dir(folder, folder);
   TList *files = dir.GetListOfFiles();
@@ -71,7 +98,9 @@ vector<TString> dirlist(TString folder){
     TIter next(files);
     while ((file=(TSystemFile*)next())) {
       fname = file->GetName();
-      if (file->IsDirectory() && !fname.Contains(".")) v_dirs.push_back(fname);
+      if (inname=="dir") {
+	if ((file->IsDirectory() && !fname.Contains("."))) v_dirs.push_back(fname);
+      } else  if(fname.Contains(inname)) v_dirs.push_back(fname);
     }
   } // if(files)
 
@@ -97,12 +126,12 @@ float cross_section(TString file){
   if(file.Contains("WJetsToLNu_HT-400to600"))  xsec = 55.61;
   if(file.Contains("WJetsToLNu_HT-600toInf"))  xsec = 18.81;
 
-  if(file.Contains("QCD_Pt-5to10"))	   xsec = 80710000000;
-  if(file.Contains("QCD_Pt-10to15"))	   xsec = 7528000000;
-  if(file.Contains("QCD_Pt-15to30"))	   xsec = 2237000000;
-  if(file.Contains("QCD_Pt-30to50"))	   xsec = 161500000;
-  if(file.Contains("QCD_Pt-50to80"))	   xsec = 22110000;
-  if(file.Contains("QCD_Pt-80to120"))	   xsec = 3000114;
+  if(file.Contains("QCD_Pt-5to10"))	 xsec = 80710000000;
+  if(file.Contains("QCD_Pt-10to15"))	 xsec = 7528000000;
+  if(file.Contains("QCD_Pt-15to30"))	 xsec = 2237000000;
+  if(file.Contains("QCD_Pt-30to50"))	 xsec = 161500000;
+  if(file.Contains("QCD_Pt-50to80"))	 xsec = 22110000;
+  if(file.Contains("QCD_Pt-80to120"))	 xsec = 3000114;
   if(file.Contains("QCD_Pt-120to170"))   xsec = 493200;
   if(file.Contains("QCD_Pt-170to300"))   xsec = 120300;
   if(file.Contains("QCD_Pt-300to470"))   xsec = 7475;
