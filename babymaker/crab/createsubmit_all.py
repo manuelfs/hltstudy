@@ -16,6 +16,6 @@ for line in lines:
             myline = mylineWithXs[0]
             if myline!='':
                 print('-------------------------------------------------------------------------------------------------------------------')
-                print('./CrabAuto/createsubmit_sample.py '+line)
-                os.system('./CrabAuto/createsubmit_sample.py '+line)
+                print('./createsubmit_sample.py '+line)
+                os.system('./createsubmit_sample.py '+line)
                 print('-------------------------------------------------------------------------------------------------------------------\n')
