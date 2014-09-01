@@ -36,3 +36,4 @@ bin/*
 *.tex
 *__.py
 *.pyc
+crab.history
