@@ -12,23 +12,29 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
 class babymaker : public edm::EDProducer {
-public:
-    explicit babymaker (const edm::ParameterSet&);
-    ~babymaker();
-
-private:
-    virtual void beginJob() ;
-    virtual void produce(edm::Event&, const edm::EventSetup&);
-    virtual void endJob() ;
-
-    // ----------member data ---------------------------
-    edm::InputTag ElectronInputTag;
-    edm::InputTag MuonInputTag;
-    edm::InputTag pfJetsInputTag;
-    edm::InputTag pfMetInputTag;
-    edm::InputTag pfHTInputTag;
-    edm::InputTag genJetsInputTag;
-    
+ public:
+  explicit babymaker (const edm::ParameterSet&);
+  ~babymaker();
+  
+ private:
+  virtual void beginJob() ;
+  virtual void produce(edm::Event&, const edm::EventSetup&);
+  virtual void endJob() ;
+  
+  // ----------member data ---------------------------
+  edm::InputTag hltElectronInputTag;
+  edm::InputTag hltMuonInputTag;
+  edm::InputTag hltPfJetsInputTag;
+  edm::InputTag hltPfMetInputTag;
+  edm::InputTag hltPfHTInputTag;
+  edm::InputTag hltGenJetsInputTag;
+  
+  edm::InputTag recoElectronInputTag;
+  edm::InputTag recoMuonInputTag;
+  edm::InputTag recoPfJetsInputTag;
+  edm::InputTag recoPfMetInputTag;
+  edm::InputTag recoGenJetsInputTag;
+  
 };
 
 

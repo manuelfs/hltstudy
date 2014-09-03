@@ -7,21 +7,33 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "DataFormats/JetReco/interface/PFJet.h"
 #include "DataFormats/EgammaCandidates/interface/Electron.h"
+#include "DataFormats/EgammaCandidates/interface/GsfElectron.h"
 #include "DataFormats/MuonReco/interface/Muon.h"
+#include "DataFormats/MuonReco/interface/MuonFwd.h"
 #include "DataFormats/JetReco/interface/GenJet.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
 #include "DataFormats/METReco/interface/GenMET.h"
+#include "DataFormats/METReco/interface/PFMET.h"
+#include "DataFormats/METReco/interface/PFMETCollection.h"
 
 #include "hltstudy/babymaker/interface/babymaker.h"
 
 #include "TMath.h"
+
+namespace{
+  template<typename T>
+    std::auto_ptr<T> make_auto(T * const p=nullptr){
+    return std::auto_ptr<T>{p};
+  }
+}
 
 babymaker::babymaker(const edm::ParameterSet& iConfig) {
 
   produces<float> ("wl1ht200").setBranchAlias("wl1ht200");
   produces<float> ("pfht").setBranchAlias("pf_ht");
   produces<float> ("genht").setBranchAlias("gen_ht");
+
   produces<float> ("genmet").setBranchAlias("gen_met");
   produces<float> ("genmetcalo").setBranchAlias("gen_metcalo");
   produces<float> ("genmetcalononprompt").setBranchAlias("gen_metcalononprompt");
@@ -50,6 +62,22 @@ babymaker::babymaker(const edm::ParameterSet& iConfig) {
   produces<std::vector<float> > ("genmuseta").setBranchAlias("genmus_eta");
   produces<std::vector<float> > ("genmusphi").setBranchAlias("genmus_phi");
 
+  produces<std::vector<float> > ("recomuspt") .setBranchAlias("reco_mus_pt");
+  produces<std::vector<float> > ("recomuseta").setBranchAlias("reco_mus_eta");
+  produces<std::vector<float> > ("recomusphi").setBranchAlias("reco_mus_phi");
+
+  produces<std::vector<float> > ("recoelspt") .setBranchAlias("reco_els_pt");
+  produces<std::vector<float> > ("recoelseta").setBranchAlias("reco_els_eta");
+  produces<std::vector<float> > ("recoelsphi").setBranchAlias("reco_els_phi");
+
+  produces<std::vector<float> > ("recojetpt") .setBranchAlias("reco_jet_pt");
+  produces<std::vector<float> > ("recojeteta").setBranchAlias("reco_jet_eta");
+  produces<std::vector<float> > ("recojetphi").setBranchAlias("reco_jet_phi");
+
+  produces<std::vector<float> > ("recogenjetpt") .setBranchAlias("reco_genjet_pt");
+  produces<std::vector<float> > ("recogenjeteta").setBranchAlias("reco_genjet_eta");
+  produces<std::vector<float> > ("recogenjetphi").setBranchAlias("reco_genjet_phi");
+
   produces<float> ("metpt").setBranchAlias("met_pt");
   produces<float> ("meteta").setBranchAlias("met_eta");
   produces<float> ("metphi").setBranchAlias("met_phi");
@@ -60,14 +88,19 @@ babymaker::babymaker(const edm::ParameterSet& iConfig) {
 
   produces<unsigned int> ("ngenlep").setBranchAlias("ngenlep");
 
-  pfJetsInputTag = iConfig.getParameter<edm::InputTag>("pfJetsInputTag_");
-  ElectronInputTag = iConfig.getParameter<edm::InputTag>("ElectronInputTag_");
-  MuonInputTag = iConfig.getParameter<edm::InputTag>("MuonInputTag_");
-  pfMetInputTag = iConfig.getParameter<edm::InputTag>("pfMetInputTag_");
-  pfHTInputTag = iConfig.getParameter<edm::InputTag>("pfHTInputTag_");
-  genJetsInputTag = iConfig.getParameter<edm::InputTag>("genJetsInputTag_");
-}
+  hltPfJetsInputTag = iConfig.getParameter<edm::InputTag>("hltPfJetsInputTag_");
+  hltElectronInputTag = iConfig.getParameter<edm::InputTag>("hltElectronInputTag_");
+  hltMuonInputTag = iConfig.getParameter<edm::InputTag>("hltMuonInputTag_");
+  hltPfMetInputTag = iConfig.getParameter<edm::InputTag>("hltPfMetInputTag_");
+  hltPfHTInputTag = iConfig.getParameter<edm::InputTag>("hltPfHTInputTag_");
+  hltGenJetsInputTag = iConfig.getParameter<edm::InputTag>("hltGenJetsInputTag_");
 
+  recoPfJetsInputTag = iConfig.getParameter<edm::InputTag>("recoPfJetsInputTag_");
+  recoElectronInputTag = iConfig.getParameter<edm::InputTag>("recoElectronInputTag_");
+  recoMuonInputTag = iConfig.getParameter<edm::InputTag>("recoMuonInputTag_");
+  recoPfMetInputTag = iConfig.getParameter<edm::InputTag>("recoPfMetInputTag_");
+  recoGenJetsInputTag = iConfig.getParameter<edm::InputTag>("recoGenJetsInputTag_");
+}
 
 babymaker::~babymaker() {}
 
@@ -77,71 +110,88 @@ void  babymaker::beginJob() {
 void babymaker::endJob() {
 }
 
-
 // ------------ method called to produce the data  ------------
 void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
-    
-  std::auto_ptr<std::vector<float> > els_pt   (new std::vector<float>);
-  std::auto_ptr<std::vector<float> > els_eta  (new std::vector<float>);
-  std::auto_ptr<std::vector<float> > els_phi  (new std::vector<float>);
+
+  auto els_pt  = make_auto(new std::vector<float>);
+  auto els_eta = make_auto(new std::vector<float>);
+  auto els_phi = make_auto(new std::vector<float>);
   
-  std::auto_ptr<std::vector<float> > mus_pt   (new std::vector<float>);
-  std::auto_ptr<std::vector<float> > mus_eta  (new std::vector<float>);
-  std::auto_ptr<std::vector<float> > mus_phi  (new std::vector<float>);
+  auto mus_pt  = make_auto(new std::vector<float>);
+  auto mus_eta = make_auto(new std::vector<float>);
+  auto mus_phi = make_auto(new std::vector<float>);
     
-  std::auto_ptr<std::vector<float> > pfjets_pt   (new std::vector<float>);
-  std::auto_ptr<std::vector<float> > pfjets_eta  (new std::vector<float>);
-  std::auto_ptr<std::vector<float> > pfjets_phi  (new std::vector<float>);
+  auto pfjets_pt  = make_auto(new std::vector<float>);
+  auto pfjets_eta = make_auto(new std::vector<float>);
+  auto pfjets_phi = make_auto(new std::vector<float>);
 
-  std::auto_ptr<std::vector<float> > genjets_pt   (new std::vector<float>);
-  std::auto_ptr<std::vector<float> > genjets_eta  (new std::vector<float>);
-  std::auto_ptr<std::vector<float> > genjets_phi  (new std::vector<float>);
+  auto genjets_pt  = make_auto(new std::vector<float>);
+  auto genjets_eta = make_auto(new std::vector<float>);
+  auto genjets_phi = make_auto(new std::vector<float>);
 
-  std::auto_ptr<std::vector<float> > genels_pt   (new std::vector<float>);
-  std::auto_ptr<std::vector<float> > genels_eta  (new std::vector<float>);
-  std::auto_ptr<std::vector<float> > genels_phi  (new std::vector<float>);
+  auto genels_pt  = make_auto(new std::vector<float>);
+  auto genels_eta = make_auto(new std::vector<float>);
+  auto genels_phi = make_auto(new std::vector<float>);
 
-  std::auto_ptr<std::vector<float> > genmus_pt   (new std::vector<float>);
-  std::auto_ptr<std::vector<float> > genmus_eta  (new std::vector<float>);
-  std::auto_ptr<std::vector<float> > genmus_phi  (new std::vector<float>);
+  auto genmus_pt  = make_auto(new std::vector<float>);
+  auto genmus_eta = make_auto(new std::vector<float>);
+  auto genmus_phi = make_auto(new std::vector<float>);
 
-  std::auto_ptr<float> met_pt   (new float);
-  std::auto_ptr<float> met_eta  (new float);
-  std::auto_ptr<float> met_phi  (new float);
+  auto reco_mus_pt  = make_auto(new std::vector<float>);
+  auto reco_mus_eta = make_auto(new std::vector<float>);
+  auto reco_mus_phi = make_auto(new std::vector<float>);
 
-  std::auto_ptr<float> pf_ht   (new float);
-  std::auto_ptr<float> gen_ht   (new float);
-  std::auto_ptr<float> gen_met   (new float);
-  std::auto_ptr<float> gen_metcalo   (new float);
-  std::auto_ptr<float> gen_metcalononprompt   (new float);
-  std::auto_ptr<float> wl1ht200   (new float);
+  auto reco_els_pt  = make_auto(new std::vector<float>);
+  auto reco_els_eta = make_auto(new std::vector<float>);
+  auto reco_els_phi = make_auto(new std::vector<float>);
 
-  std::auto_ptr<float> pf_mht_pt   (new float);
-  std::auto_ptr<float> pf_mht_eta   (new float);
-  std::auto_ptr<float> pf_mht_phi   (new float);
+  auto reco_jet_pt  = make_auto(new std::vector<float>);
+  auto reco_jet_eta = make_auto(new std::vector<float>);
+  auto reco_jet_phi = make_auto(new std::vector<float>);
 
-  std::auto_ptr<float> pseudoMT2_hlt  (new float);
-  std::auto_ptr<float> pseudoMT2_snt  (new float);
-  std::auto_ptr<float> mt2_hlt  (new float);
-  std::auto_ptr<float> mt2_snt  (new float);
+  auto reco_genjet_pt  = make_auto(new std::vector<float>);
+  auto reco_genjet_eta = make_auto(new std::vector<float>);
+  auto reco_genjet_phi = make_auto(new std::vector<float>);
 
-  std::auto_ptr<unsigned int> ngenlep (new unsigned int);
+  auto met_pt  = make_auto(new float);
+  auto met_eta = make_auto(new float);
+  auto met_phi = make_auto(new float);
+
+  auto pf_ht    = make_auto(new float);
+  auto gen_ht   = make_auto(new float);
+  auto wl1ht200 = make_auto(new float);
+
+  auto gen_met              = make_auto(new float);
+  auto gen_metcalo          = make_auto(new float);
+  auto gen_metcalononprompt = make_auto(new float);
+
+  auto pf_mht_pt  = make_auto(new float);
+  auto pf_mht_eta = make_auto(new float);
+  auto pf_mht_phi = make_auto(new float);
+
+  auto pseudoMT2_hlt = make_auto(new float);
+  auto pseudoMT2_snt = make_auto(new float);
+  auto mt2_hlt       = make_auto(new float);
+  auto mt2_snt       = make_auto(new float);
+
+  auto ngenlep = make_auto(new unsigned int);
 
   edm::Handle<edm::View<reco::PFJet> > jet_h;
-  iEvent.getByLabel(pfJetsInputTag, jet_h);
+  iEvent.getByLabel(hltPfJetsInputTag, jet_h);
 
   edm::Handle<edm::View<reco::MET> > pfht_h;
-  iEvent.getByLabel(pfHTInputTag, pfht_h);
+  iEvent.getByLabel(hltPfHTInputTag, pfht_h);
 
   edm::Handle<edm::View<reco::MET> > met_h;
-  iEvent.getByLabel(pfMetInputTag, met_h);
+  iEvent.getByLabel(hltPfMetInputTag, met_h);
 
   edm::Handle<edm::View<reco::GenJet> > genjet_h;
-  iEvent.getByLabel(genJetsInputTag, genjet_h);
+  iEvent.getByLabel(hltGenJetsInputTag, genjet_h);
 
   edm::Handle<reco::GenParticleCollection> genparts;
   iEvent.getByLabel("genParticles", genparts);
- 
+
+
   edm::Handle<edm::View<reco::GenMET> >genmet_h;
   iEvent.getByLabel("genMetTrue", genmet_h);
   
@@ -153,9 +203,21 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
   //edm::Handle<reco::JetTagCollection> btag_h ;
   //iEvent.getByLabel("hltL3CombinedSecondaryVertexBJetTags", btag_h) ;
+  
+  edm::Handle<reco::MuonCollection> reco_muon_h;
+  iEvent.getByLabel(recoMuonInputTag, reco_muon_h);
+
+  edm::Handle<reco::GsfElectronCollection> reco_electron_h;
+  iEvent.getByLabel(recoElectronInputTag, reco_electron_h);
+
+  edm::Handle<reco::PFJetCollection> reco_jet_h;
+  iEvent.getByLabel(recoPfJetsInputTag, reco_jet_h);
+
+  edm::Handle<reco::GenJetCollection> reco_genjet_h;
+  iEvent.getByLabel(recoGenJetsInputTag, reco_genjet_h);
 
   *ngenlep = 0;
-  for (reco::GenParticleCollection::const_iterator genp = genparts->begin(); genp != genparts->end(); ++ genp ) {
+  for (auto genp = genparts->cbegin(); genp != genparts->cend(); ++genp ) {
     if ((genp->status() == 3 || genp->status() == 23) && (abs(genp->pdgId()) == 11 || abs(genp->pdgId()) == 13 || abs(genp->pdgId()) == 15)) (*ngenlep)++;
         
     if (genp->status() != 3 && genp->status() != 23) continue;  
@@ -176,10 +238,11 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     }
   }
     
+
   edm::Handle<edm::View<reco::Electron> > els_h;
-  if(ElectronInputTag.label() !="unused") {
-    iEvent.getByLabel(ElectronInputTag, els_h);
-    for(edm::View<reco::Electron>::const_iterator els_it = els_h->begin(); els_it != els_h->end(); els_it++){
+  if(hltElectronInputTag.label() !="unused") {
+    iEvent.getByLabel(hltElectronInputTag, els_h);
+    for(auto els_it = els_h->begin(); els_it != els_h->end(); ++els_it){
       if(abs(els_it->pdgId()) != 11) continue;
       els_pt  ->push_back(els_it->pt());
       els_eta ->push_back(els_it->eta());
@@ -188,16 +251,16 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   }
 
   edm::Handle<edm::View<reco::Muon> > mus_h;
-  if(MuonInputTag.label() !="unused") {
-    iEvent.getByLabel(MuonInputTag, mus_h);
-    for(edm::View<reco::Muon>::const_iterator mus_it = mus_h->begin(); mus_it != mus_h->end(); mus_it++){
+  if(hltMuonInputTag.label() !="unused") {
+    iEvent.getByLabel(hltMuonInputTag, mus_h);
+    for(auto mus_it = mus_h->begin(); mus_it != mus_h->end(); ++mus_it){
       mus_pt  ->push_back(mus_it->pt());
       mus_eta ->push_back(mus_it->eta());
       mus_phi ->push_back(mus_it->phi());
     } 
   }
 
-  for(edm::View<reco::PFJet>::const_iterator jet_it = jet_h->begin(); jet_it != jet_h->end(); jet_it++){
+  for(auto jet_it = jet_h->begin(); jet_it != jet_h->end(); ++jet_it){
 
     if(jet_it->pt() < 35.0) continue;
     pfjets_pt  ->push_back(jet_it->pt());
@@ -205,7 +268,7 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     pfjets_phi ->push_back(jet_it->phi());
   } 
   *gen_ht = 0;
-  for(edm::View<reco::GenJet>::const_iterator genjet_it = genjet_h->begin(); genjet_it != genjet_h->end(); genjet_it++){
+  for(auto genjet_it = genjet_h->begin(); genjet_it != genjet_h->end(); ++genjet_it){
 
     if(genjet_it->pt() < 35.0) continue;
 
@@ -215,8 +278,34 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
     if(genjet_it->pt()>40 && genjet_it->eta() < 3) *gen_ht += genjet_it->pt();
 
-  } 
+  }
 
+  for(auto reco_muon_it = reco_muon_h->begin(); reco_muon_it!=reco_muon_h->end(); ++reco_muon_it){
+    reco_mus_pt ->push_back(reco_muon_it->pt());
+    reco_mus_eta->push_back(reco_muon_it->eta());
+    reco_mus_phi->push_back(reco_muon_it->phi());
+  }
+
+  for(auto reco_electron_it = reco_electron_h->begin(); reco_electron_it!=reco_electron_h->end(); ++reco_electron_it){
+    reco_els_pt ->push_back(reco_electron_it->pt());
+    reco_els_eta->push_back(reco_electron_it->eta());
+    reco_els_phi->push_back(reco_electron_it->phi());
+  }
+
+  for(auto reco_jet_it = reco_jet_h->begin(); reco_jet_it!=reco_jet_h->end(); ++reco_jet_it){
+    if(reco_jet_it->pt()<35.0) continue;
+    reco_jet_pt->push_back(reco_jet_it->pt());
+    reco_jet_eta->push_back(reco_jet_it->eta());
+    reco_jet_phi->push_back(reco_jet_it->phi());
+  }
+ 
+  for(auto reco_genjet_it = reco_genjet_h->begin(); reco_genjet_it!=reco_genjet_h->end(); ++reco_genjet_it){
+    if(reco_genjet_it->pt()<35.0) continue;
+    reco_genjet_pt->push_back(reco_genjet_it->pt());
+    reco_genjet_eta->push_back(reco_genjet_it->eta());
+    reco_genjet_phi->push_back(reco_genjet_it->phi());
+  }
+ 
   reco::GenMET genmet_obj(genmet_h->at(0));
   *gen_met = genmet_obj.pt();
   
@@ -225,7 +314,7 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   
   reco::GenMET genmetcalononprompt_obj(genmetcalononprompt_h->at(0));
   *gen_metcalononprompt = genmetcalononprompt_obj.pt();
-
+  
   // Turn on curve for L1 HTT200 (calculated by Dominick)
   *wl1ht200 = (0.5*TMath::Erf((1.35121e-02)*(*gen_ht-(3.02695e+02)))+0.5);
 
@@ -263,16 +352,33 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   iEvent.put(genmus_eta,  "genmuseta" );
   iEvent.put(genmus_phi,  "genmusphi" );
 
+  iEvent.put(reco_mus_pt,  "recomuspt");
+  iEvent.put(reco_mus_eta, "recomuseta");
+  iEvent.put(reco_mus_phi, "recomusphi");
+
+  iEvent.put(reco_els_pt,  "recoelspt");
+  iEvent.put(reco_els_eta, "recoelseta");
+  iEvent.put(reco_els_phi, "recoelsphi");
+
+  iEvent.put(reco_jet_pt,  "recojetpt");
+  iEvent.put(reco_jet_eta, "recojeteta");
+  iEvent.put(reco_jet_phi, "recojetphi");
+
+  iEvent.put(reco_genjet_pt,  "recogenjetpt");
+  iEvent.put(reco_genjet_eta, "recogenjeteta");
+  iEvent.put(reco_genjet_phi, "recogenjetphi");
+
   iEvent.put(met_pt,   "metpt" );
   iEvent.put(met_eta,  "meteta" );
   iEvent.put(met_phi,  "metphi" );
 
   iEvent.put(pf_ht,   "pfht" );
   iEvent.put(gen_ht,   "genht" );
-  iEvent.put(gen_met,   "genmet" );
-  iEvent.put(gen_metcalo,   "genmetcalo" );
-  iEvent.put(gen_metcalononprompt,   "genmetcalononprompt" );
   iEvent.put(wl1ht200,   "wl1ht200" );
+
+  iEvent.put(gen_met, "genmet");
+  iEvent.put(gen_metcalo, "genmetcalo");
+  iEvent.put(gen_metcalononprompt, "genmetcalononprompt");
 
   iEvent.put(pf_mht_pt,   "pfmhtpt" );
   iEvent.put(pf_mht_eta,  "pfmhteta" );

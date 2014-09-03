@@ -6,6 +6,30 @@ process = cms.Process( "reHLT" )
 process.load("hltstudy.babymaker.setup_cff")
 process.load("hltstudy.babymaker.babymakermu_cfi")
 
+# import of standard configurations
+process.load('Configuration.StandardSequences.Services_cff')
+process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')
+process.load('FWCore.MessageService.MessageLogger_cfi')
+process.load('Configuration.EventContent.EventContent_cff')
+process.load('SimGeneral.MixingModule.mix_POISSON_average_cfi')
+process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
+#process.load('Configuration.StandardSequences.MagneticField_38T_cff') #Might want this, but probably okay to omit
+process.load('Configuration.StandardSequences.RawToDigi_cff')
+process.load('Configuration.StandardSequences.L1Reco_cff')
+process.load('Configuration.StandardSequences.Reconstruction_cff')
+process.load('Configuration.StandardSequences.EndOfProcess_cff')
+#process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff') #Might want this, maybe dangerous to omit
+
+process.esp_SiStripGainESProducer = cms.ESPrefer("SiStripGainESProducer")
+process.esp_SiStripQualityESProducer = cms.ESPrefer("SiStripQualityESProducer")
+process.esp_EcalTrigTowerConstituentsMapBuilder = cms.ESPrefer("EcalTrigTowerConstituentsMapBuilder","hltESPEcalTrigTowerConstituentsMapBuilder")
+process.esp_HcalTopologyIdealEP = cms.ESPrefer("HcalTopologyIdealEP")
+process.esp_TrackerGeometricDetESModule = cms.ESPrefer("TrackerGeometricDetESModule")
+process.esp_MuonDetLayerGeometryESProducer = cms.ESPrefer("MuonDetLayerGeometryESProducer","hltESPMuonDetLayerGeometryESProducer")
+process.esp_TrackerDigiGeometryESModule = cms.ESPrefer("TrackerDigiGeometryESModule")
+process.esp_TrackerRecoGeometryESProducer = cms.ESPrefer("TrackerRecoGeometryESProducer","hltESPTrackerRecoGeometryESProducer")
+process.esp_GlobalTrackingGeometryESProducer = cms.ESPrefer("GlobalTrackingGeometryESProducer","hltESPGlobalTrackingGeometryESProducer")
+
 process.HLTConfigVersion = cms.PSet(
   tableName = cms.string('/users/manuelf/RA4ucsb/V4')
 )
@@ -5508,14 +5532,9 @@ process.antiktGenJets = cms.Sequence(
     process.ak4GenJetsNoNu
 )
 
-#process.HLT_PFNoPUHT200_Mu15_PFMET0_v5 = cms.Path( process.HLTBeginSequence + process.hltL1sL1HTT150OrHTT175 + process.hltPrePFNoPUHT200Mu20PFMET0 + cms.ignore(process.hltL1sL1SingleMuOpenCandidate) + process.HLTRecoJetSequenceAK4L1FastJetCorrected + process.hltHtMht + process.hltHt150 + process.hltHTT150L1MuFiltered0 + process.HLTL2muonrecoSequence + process.hltL1HTT150singleMuL2PreFiltered10 + process.HLTL3muonrecoSequence + process.hltL1HTT150singleMuL3PreFiltered15 + process.HLTPFL1FastL2L3ReconstructionSequence + process.HLTPFnoPUL1FastL2L3ReconstructionSequence + process.hltPFHTNoPU + process.hltPFMETProducer + process.hltPFHT200PFMET0 + process.antiktGenJets + process.HLTEndSequence  + process.babymakermu)
-process.HLT_PFNoPUHT200_Mu20_PFMET0_v5 = cms.Path( process.HLTBeginSequence + process.hltL1sL1HTT150OrHTT175 + process.hltPrePFNoPUHT200Mu20PFMET0 + cms.ignore(process.hltL1sL1SingleMuOpenCandidate) + process.HLTRecoJetSequenceAK4L1FastJetCorrected + process.hltHtMht + process.hltHt150 + process.hltHTT150L1MuFiltered0 + process.HLTL2muonrecoSequence + process.hltL1HTT150singleMuL2PreFiltered10 + process.HLTL3muonrecoSequence + process.hltL1HTT150singleMuL3PreFiltered20 + process.HLTPFL1FastL2L3ReconstructionSequence + process.HLTPFnoPUL1FastL2L3ReconstructionSequence + process.hltPFHTNoPU + process.hltPFMETProducer + process.hltPFHT200PFMET0  + process.antiktGenJets + process.HLTEndSequence  + process.babymakermu)
-
-
 process.source = cms.Source( "PoolSource",
     fileNames = cms.untracked.vstring(
         'file:/nfs-7/userdata/jaehyeok/HLT/ttbar-13tev-850evts.root',
-        #'file:/hadoop/cms/phedex/store/mc/Fall13dr/QCD_Pt-1000to1400_Tune4C_13TeV_pythia8/GEN-SIM-RAW/castor_tsg_PU40bx25_POSTLS162_V2-v1/00000/A8B9F84B-039E-E311-96E8-002590593872.root',
     ),
     secondaryFileNames = cms.untracked.vstring(
     ),
@@ -5573,6 +5592,15 @@ process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32( 30 )
 )
 
+# Pileup mixing
+process.mix.input.nbPileupEvents.averageNumber = cms.double(40.000000)
+process.mix.bunchspace = cms.int32(25)
+process.mix.minBunch = cms.int32(-12)
+process.mix.maxBunch = cms.int32(3)
+process.mix.input.fileNames = cms.untracked.vstring(['/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/001CB469-A91E-E311-9BFE-0025907FD24A.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/009CB248-A81C-E311-ACD8-00259073E4F0.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/009F81D5-B21C-E311-966C-BCAEC50971D0.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/00B5BB8C-A91E-E311-816A-782BCB1F5E6B.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/00B8F676-BA1C-E311-BA87-0019B9CABFB6.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/00DD7446-B51D-E311-B714-001E6739CEB1.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/021E1B53-101D-E311-886F-00145EDD7569.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/022A782D-A51C-E311-9856-80000048FE80.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/026FE678-BA1C-E311-BEF5-00D0680BF90A.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/02A10BDE-B21C-E311-AB59-00266CF327C0.root'])
+from Configuration.AlCa.GlobalTag import GlobalTag
+process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:startup', '')
+
 # enable the TrigReport and TimeReport
 process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool( False )
@@ -5583,7 +5611,6 @@ process.load("FWCore.MessageService.MessageLogger_cfi")
 process.out = cms.OutputModule(
         "PoolOutputModule",
         fileName     = cms.untracked.string('ntuple_hlt_mu20.root'), ##
-#        fileName     = cms.untracked.string('edm_hlt_mu20.root'),
         dropMetaData = cms.untracked.string("ALL")
         #SelectEvents = cms.untracked.PSet(
             #SelectEvents = cms.vstring('HLT_L1HTT')
@@ -5595,6 +5622,25 @@ process.outpath      = cms.EndPath(process.out)
 process.out.outputCommands = cms.untracked.vstring( 'drop *' ) ##
 process.out.outputCommands.extend(cms.untracked.vstring('keep *_*babymaker*_*_*')) ##
 
+# Path and EndPath definitions for RECO
+process.raw2digi_step = cms.Path(process.RawToDigi)
+process.L1Reco_step = cms.Path(process.L1Reco)
+process.reconstruction_step = cms.Path(process.reconstruction)
+process.endjob_step = cms.EndPath(process.endOfProcess)
+
+process.el15 = cms.Sequence( process.HLTBeginSequence + process.hltL1sL1HTT150OrHTT175 + process.hltPreCleanPFNoPUHT200Ele20CaloIdTCaloIsoVLTrkIdTTrkIsoVLPFMET0 + process.HLTEle15CaloIdTTrkIdTCaloIsoVLTrkIsoVLUnseeded + process.HLTPFL1FastL2L3ReconstructionSequence + process.HLTPFnoPUL1FastL2L3ReconstructionSequence + process.hltEle15CaloIdTTrkIdTCaloIsoVLTrkIsoVLPFJetCollForElePlusJetsNoPU + process.hltEle15CaloIdTTrkIdTCaloIsoVLTrkIsoVLCleanedPFHTNoPU + process.hltPFMETProducer + process.hltElectron15CaloIdTCaloIsoVLTrkIdTTrkIsoVLCleanedPFHT200NoPUPFMET0 + process.antiktGenJets + process.HLTEndSequence )
+process.el20 = cms.Sequence( process.HLTBeginSequence + process.hltL1sL1HTT150OrHTT175 + process.hltPreCleanPFNoPUHT200Ele20CaloIdTCaloIsoVLTrkIdTTrkIsoVLPFMET0 + process.HLTEle20CaloIdTTrkIdTCaloIsoVLTrkIsoVLUnseeded + process.HLTPFL1FastL2L3ReconstructionSequence + process.HLTPFnoPUL1FastL2L3ReconstructionSequence + process.hltEle15CaloIdTTrkIdTCaloIsoVLTrkIsoVLPFJetCollForElePlusJetsNoPU + process.hltEle15CaloIdTTrkIdTCaloIsoVLTrkIsoVLCleanedPFHTNoPU + process.hltPFMETProducer + process.hltElectron15CaloIdTCaloIsoVLTrkIdTTrkIsoVLCleanedPFHT200NoPUPFMET0 + process.antiktGenJets + process.HLTEndSequence )
+process.mu15 = cms.Sequence( process.HLTBeginSequence + process.hltL1sL1HTT150OrHTT175 + process.hltPrePFNoPUHT200Mu20PFMET0 + cms.ignore(process.hltL1sL1SingleMuOpenCandidate) + process.HLTRecoJetSequenceAK4L1FastJetCorrected + process.hltHtMht + process.hltHt150 + process.hltHTT150L1MuFiltered0 + process.HLTL2muonrecoSequence + process.hltL1HTT150singleMuL2PreFiltered10 + process.HLTL3muonrecoSequence + process.hltL1HTT150singleMuL3PreFiltered15 + process.HLTPFL1FastL2L3ReconstructionSequence + process.HLTPFnoPUL1FastL2L3ReconstructionSequence + process.hltPFHTNoPU + process.hltPFMETProducer + process.hltPFHT200PFMET0 + process.antiktGenJets + process.HLTEndSequence)
+process.mu20 = cms.Sequence( process.HLTBeginSequence + process.hltL1sL1HTT150OrHTT175 + process.hltPrePFNoPUHT200Mu20PFMET0 + cms.ignore(process.hltL1sL1SingleMuOpenCandidate) + process.HLTRecoJetSequenceAK4L1FastJetCorrected + process.hltHtMht + process.hltHt150 + process.hltHTT150L1MuFiltered0 + process.HLTL2muonrecoSequence + process.hltL1HTT150singleMuL2PreFiltered10 + process.HLTL3muonrecoSequence + process.hltL1HTT150singleMuL3PreFiltered20 + process.HLTPFL1FastL2L3ReconstructionSequence + process.HLTPFnoPUL1FastL2L3ReconstructionSequence + process.hltPFHTNoPU + process.hltPFMETProducer + process.hltPFHT200PFMET0 + process.antiktGenJets + process.HLTEndSequence )
+
+process.reco = cms.Sequence( process.RawToDigi + process.L1Reco + process.reconstruction + process.endOfProcess )
+
+process.HLT_CleanPFNoPUHT200_Ele15_CaloIdT_CaloIsoVL_TrkIdT_TrkIsoVL_PFMET0_v4 = cms.Path(process.el15 + process.reco + process.babymaker)
+process.HLT_CleanPFNoPUHT200_Ele20_CaloIdT_CaloIsoVL_TrkIdT_TrkIsoVL_PFMET0_v4 = cms.Path(process.el20 + process.reco + process.babymaker)
+process.HLT_PFNoPUHT200_Mu15_PFMET0_v5 = cms.Path(process.mu15 + process.reco + process.babymaker)
+process.HLT_PFNoPUHT200_Mu20_PFMET0_v5 = cms.Path(process.mu20 + process.reco + process.babymaker)
+
+process.schedule = cms.Schedule( process.HLT_PFNoPUHT200_Mu20_PFMET0_v5, process.outpath ) ##
 
 # override the GlobalTag, connection string and pfnPrefix
 if 'GlobalTag' in process.__dict__:

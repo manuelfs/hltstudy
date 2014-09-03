@@ -1,16 +1,19 @@
 import FWCore.ParameterSet.Config as cms
 
-babymakerel = cms.EDProducer(
+babymaker = cms.EDProducer(
     "babymaker",
-    MuonInputTag_       = cms.InputTag("unused"),
-    #ElectronInputTag_   = cms.InputTag("hltPixelMatchElectronsActivity"), 
-    ElectronInputTag_   = cms.InputTag("hltEgammaGsfElectrons"), 
-    #pfJetsInputTag_     = cms.InputTag("hltAK4PFJetL1FastL2L3CorrectedNoPU"),
-    pfJetsInputTag_     = cms.InputTag("hltAK4PFJetsCorrected"),
-    pfMetInputTag_      = cms.InputTag("hltPFMETProducer"),
-    #pfHTInputTag_       = cms.InputTag("hltEle15CaloIdTTrkIdTCaloIsoVLTrkIsoVLCleanedPFHTNoPU"),
-    pfHTInputTag_       = cms.InputTag("hltPFHT"),
-    genJetsInputTag_    = cms.InputTag("ak4GenJetsNoNu"),
+    hltMuonInputTag_       = cms.InputTag("unused"),
+    #hltElectronInputTag_   = cms.InputTag("hltEgammaGsfElectrons"), 
+    hltElectronInputTag_   = cms.InputTag("hltPixelMatchElectronsActivity"), 
+    #hltPfJetsInputTag_     = cms.InputTag("hltAK4PFJetsCorrected"),
+    hltPfJetsInputTag_     = cms.InputTag("hltAK4PFJetL1FastL2L3CorrectedNoPU"),
+    hltPfMetInputTag_      = cms.InputTag("hltPFMETProducer"),
+    #hltPfHTInputTag_       = cms.InputTag("hltPFHT"),
+    hltPfHTInputTag_       = cms.InputTag("hltEle15CaloIdTTrkIdTCaloIsoVLTrkIsoVLCleanedPFHTNoPU"),
+    hltGenJetsInputTag_    = cms.InputTag("ak4GenJetsNoNu"),
+    recoMuonInputTag_      = cms.InputTag("muons"),
+    recoElectronInputTag_  = cms.InputTag("gedGsfElectrons"), 
+    recoPfJetsInputTag_    = cms.InputTag("ak4PFJets"),
+    recoPfMetInputTag_     = cms.InputTag("pfMet"),
+    recoGenJetsInputTag_   = cms.InputTag("ak5GenJets"),
 )
-
-
