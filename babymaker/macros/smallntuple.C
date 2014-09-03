@@ -1,9 +1,12 @@
 // smallntuple.C: Makes small ntuples from the HLT babies
 
+#include "hlt_class.cc"
+#include <utility>
 #include <fstream>
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <algorithm>    // std::sort
 #include "TFile.h"
 #include "TBranch.h"
 #include "TMath.h"
@@ -15,65 +18,109 @@
 #include "TSystemFile.h"
 #include "TCollection.h"
 #include "TError.h" // Turns off "no dictionary for class" warnings
+#include "TSystem.h"
 
+using namespace baby;
 using namespace std;
 using std::cout;
 using std::endl;
 
-vector<TString> dirlist(TString folder, TString inname="dir");
+vector<TString> dirlist(TString folder, TString inname="dir", TString tag="");
 float cross_section(TString file);
+void sortlists(int &nlist, vector<double> *pt, vector<double> *eta, vector<double> *phi,
+	       const vector<float> treept, const vector<float> treeeta, const vector<float> treephi);
 
-void smallntuple(TString folder="/hadoop/cms/store/user/manuelf/HLT/"){
+void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString subfolder="test",
+		 TString tagFolders="", int maxfiles=-1){
   gErrorIgnoreLevel=kError; // Turns off "no dictionary for class" warnings
-  float onmet, onht, weight, wl1ht200, genht;
-  vector<float> genjets_pt, genjets_eta;
+  TString ntupledir = "ntuples/"+subfolder+"/";
+  gSystem->mkdir(ntupledir);
+
+  int totentries;
+  float onmet, onmet_eta, onmet_phi, onht, weight, wl1ht200, genht, genmet;
+  //vector<int_double> sorted; 
+  int nels, ngenels, nmus, ngenmus, njets, ngenjets;
+  vector<double> elspt, elseta, elsphi, genelspt, genelseta, genelsphi;
+  vector<double> muspt, museta, musphi, genmuspt, genmuseta, genmusphi;
+  vector<double> jetspt, jetseta, jetsphi, genjetspt, genjetseta, genjetsphi;
   const float luminosity = 19600;
   TChain chain("Events");
   TTree tree("tree", "tree");
   tree.Branch("onmet", &onmet);
+  tree.Branch("onmet_eta", &onmet_eta);
+  tree.Branch("onmet_phi", &onmet_phi);
   tree.Branch("onht", &onht);
   tree.Branch("weight", &weight);
   tree.Branch("wl1ht200", &wl1ht200);
   tree.Branch("genht", &genht);
+  tree.Branch("genmet", &genmet);
+  tree.Branch("els_pt", &elspt);
+  tree.Branch("els_eta", &elseta);
+  tree.Branch("els_phi", &elsphi);
+  tree.Branch("genels_pt", &genelspt);
+  tree.Branch("genels_eta", &genelseta);
+  tree.Branch("genels_phi", &genelsphi);
+  tree.Branch("mus_pt", &muspt);
+  tree.Branch("mus_eta", &museta);
+  tree.Branch("mus_phi", &musphi);
+  tree.Branch("genmus_pt", &genmuspt);
+  tree.Branch("genmus_eta", &genmuseta);
+  tree.Branch("genmus_phi", &genmusphi);
+  tree.Branch("jets_pt", &jetspt);
+  tree.Branch("jets_eta", &jetseta);
+  tree.Branch("jets_phi", &jetsphi);
+  tree.Branch("genjets_pt", &genjetspt);
+  tree.Branch("genjets_eta", &genjetseta);
+  tree.Branch("genjets_phi", &genjetsphi);
+  tree.Branch("nels", &nels);
+  tree.Branch("ngenels", &ngenels);
+  tree.Branch("nmus", &nmus);
+  tree.Branch("ngenmus", &ngenmus);
+  tree.Branch("njets", &njets);
+  tree.Branch("ngenjets", &ngenjets);
+
+  TTree treeglobal("treeglobal", "treeglobal");
+  treeglobal.Branch("noriginal", &totentries);
 
   TString filename, rootname, sampledir;
-  vector<TString> dirs = dirlist(folder);
+  vector<TString> dirs = dirlist(folder, "dir", tagFolders);
   for(unsigned idir(0); idir < dirs.size(); idir++){
-    //for(unsigned idir(0); idir < 3; idir++){
     sampledir = folder+"/"+dirs[idir];
     chain.Add(sampledir+"/*.root");
-    long totentries(chain.GetEntries()), totentry(0);
+    totentries = chain.GetEntries();
+    int totentry(0);
     chain.Reset();
     float xsection = cross_section(dirs[idir]);
 
     vector<TString> rootfiles = dirlist(sampledir, ".root");
     cout<<endl<<"Adding the "<<rootfiles.size()<<" files in "<<sampledir
 	<<" with "<<totentries<<" entries"<<endl;
-    filename = "ntuples/"+dirs[idir]+".root";
+    filename = ntupledir+dirs[idir]+".root";
     TFile rootfile(filename, "recreate");
-    // Using SetMakeClass == 1 can only be done in indivicual TTrees
-    for(unsigned ifile(0); ifile < rootfiles.size(); ifile++){
+    int nfiles = static_cast<int>(rootfiles.size());
+    if(maxfiles>0 && maxfiles<nfiles) nfiles = maxfiles;
+    for(int ifile(0); ifile < nfiles; ifile++){
       rootname = sampledir+"/"+rootfiles[ifile];
       chain.Add(rootname);
-      chain.SetMakeClass(1);
-      TBranch *b_ht = chain.GetBranch(chain.GetAlias("pf_ht"));
-      TBranch *b_met = chain.GetBranch(chain.GetAlias("met_pt"));
-      TBranch *b_genjets_pt = chain.GetBranch(chain.GetAlias("genjets_pt"));
-      TBranch *b_genjets_eta = chain.GetBranch(chain.GetAlias("genjets_eta"));
-      b_ht->SetAddress(&onht);
-      b_met->SetAddress(&onmet);
-      b_genjets_pt->SetAddress(&genjets_pt);
-      b_genjets_eta->SetAddress(&genjets_eta);
-      chain.SetMakeClass(0);
+      hlt.Init(&chain);
       long entries(chain.GetEntries());
       for(int entry(0); entry<entries; entry++, totentry++){
 	if((totentry+1)%500000==0) cout<<"Done "<<totentry+1<<" entries"<<endl;
-	b_ht->GetEntry(entry);b_met->GetEntry(entry);
-	b_genjets_pt->GetEntry(entry);b_genjets_eta->GetEntry(entry);
-	if(onht<=0) continue;
-	genht = 0;
-	for(unsigned ijet(0); ijet < genjets_pt.size(); ijet++) 
-	  if(genjets_pt.at(ijet)>40 && genjets_eta.at(ijet)<3) genht += genjets_pt.at(ijet);
+	hlt.GetEntry(entry);
+	// Saving only events with at least one lepton
+	if(mus_pt().size()==0 && els_pt().size()==0) continue;
+	onht = pf_ht();
+	onmet = met_pt();
+	onmet_eta = met_eta();
+	onmet_phi = met_phi();
+	genht = gen_ht();
+	genmet = gen_met();
+	sortlists(nmus, &muspt, &museta, &musphi, mus_pt(), mus_eta(), mus_phi());
+	sortlists(ngenmus, &genmuspt, &genmuseta, &genmusphi, genmus_pt(), genmus_eta(), genmus_phi());
+	sortlists(nels, &elspt, &elseta, &elsphi, els_pt(), els_eta(), els_phi());
+	sortlists(ngenels, &genelspt, &genelseta, &genelsphi, genels_pt(), genels_eta(), genels_phi());
+	sortlists(njets, &jetspt, &jetseta, &jetsphi, pfjets_pt(), pfjets_eta(), pfjets_phi());
+	sortlists(ngenjets, &genjetspt, &genjetseta, &genjetsphi, genjets_pt(), genjets_eta(), genjets_phi());
 	wl1ht200 = (0.5*TMath::Erf((1.35121e-02)*(genht-(3.02695e+02)))+0.5);
 	weight = wl1ht200*xsection*luminosity / static_cast<double>(totentries);
 	tree.Fill();
@@ -81,14 +128,38 @@ void smallntuple(TString folder="/hadoop/cms/store/user/manuelf/HLT/"){
       chain.Reset(); 
     } // Loop over files in the sample folder
     tree.Write();
+    treeglobal.Fill();
+    treeglobal.Write();
     rootfile.Close();
     cout<<"Written tree "<<filename<<endl;
-    tree.Reset();
+    tree.Reset(); treeglobal.Reset();
   } // Loop over sample folders
 }
 
+// Definitions to sort vectors
+typedef std::pair<int,double> int_double;
+bool id_big2small(const int_double& left, const int_double& right){ 
+  return left.second > right.second; 
+}  
+
+void sortlists(int &nlist, vector<double> *pt, vector<double> *eta, vector<double> *phi,
+	       const vector<float> treept, const vector<float> treeeta, const vector<float> treephi){
+
+  nlist = static_cast<int>(treept.size());
+  vector<int_double> sorted; 
+  pt->resize(0); sorted.resize(0);
+  for(int ind(0); ind<nlist; ind++)
+    sorted.push_back(make_pair(ind,treept[ind]));
+  sort(sorted.begin(), sorted.end(), id_big2small);
+  for(int ind(0); ind<nlist; ind++){
+    pt->push_back(treept[sorted[ind].first]);
+    eta->push_back(treeeta[sorted[ind].first]);
+    phi->push_back(treephi[sorted[ind].first]);
+  }
+}
+
 // Returns list of directorites or files in folder
-vector<TString> dirlist(TString folder, TString inname){
+vector<TString> dirlist(TString folder, TString inname, TString tag){
   vector<TString> v_dirs;
   TSystemDirectory dir(folder, folder);
   TList *files = dir.GetListOfFiles();
@@ -99,7 +170,7 @@ vector<TString> dirlist(TString folder, TString inname){
     while ((file=(TSystemFile*)next())) {
       fname = file->GetName();
       if (inname=="dir") {
-	if ((file->IsDirectory() && !fname.Contains("."))) v_dirs.push_back(fname);
+	if ((file->IsDirectory() && !fname.Contains(".") && fname.Contains(tag))) v_dirs.push_back(fname);
       } else  if(fname.Contains(inname)) v_dirs.push_back(fname);
     }
   } // if(files)
