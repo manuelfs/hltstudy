@@ -11,6 +11,7 @@
 #include "DataFormats/JetReco/interface/GenJet.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
+#include "DataFormats/METReco/interface/GenMET.h"
 
 #include "hltstudy/babymaker/interface/babymaker.h"
 
@@ -21,6 +22,9 @@ babymaker::babymaker(const edm::ParameterSet& iConfig) {
   produces<float> ("wl1ht200").setBranchAlias("wl1ht200");
   produces<float> ("pfht").setBranchAlias("pf_ht");
   produces<float> ("genht").setBranchAlias("gen_ht");
+  produces<float> ("genmet").setBranchAlias("gen_met");
+  produces<float> ("genmetcalo").setBranchAlias("gen_metcalo");
+  produces<float> ("genmetcalononprompt").setBranchAlias("gen_metcalononprompt");
 
   produces<std::vector<float> > ("elspt").setBranchAlias("els_pt");
   produces<std::vector<float> > ("elseta").setBranchAlias("els_eta");
@@ -107,6 +111,9 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
   std::auto_ptr<float> pf_ht   (new float);
   std::auto_ptr<float> gen_ht   (new float);
+  std::auto_ptr<float> gen_met   (new float);
+  std::auto_ptr<float> gen_metcalo   (new float);
+  std::auto_ptr<float> gen_metcalononprompt   (new float);
   std::auto_ptr<float> wl1ht200   (new float);
 
   std::auto_ptr<float> pf_mht_pt   (new float);
@@ -134,7 +141,18 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
   edm::Handle<reco::GenParticleCollection> genparts;
   iEvent.getByLabel("genParticles", genparts);
+ 
+  edm::Handle<edm::View<reco::GenMET> >genmet_h;
+  iEvent.getByLabel("genMetTrue", genmet_h);
+  
+  edm::Handle<edm::View<reco::GenMET> >genmetcalo_h;
+  iEvent.getByLabel("genMetCalo", genmetcalo_h);
+  
+  edm::Handle<edm::View<reco::GenMET> >genmetcalononprompt_h;
+  iEvent.getByLabel("genMetCaloAndNonPrompt", genmetcalononprompt_h);
 
+  //edm::Handle<reco::JetTagCollection> btag_h ;
+  //iEvent.getByLabel("hltL3CombinedSecondaryVertexBJetTags", btag_h) ;
 
   *ngenlep = 0;
   for (reco::GenParticleCollection::const_iterator genp = genparts->begin(); genp != genparts->end(); ++ genp ) {
@@ -158,7 +176,6 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     }
   }
     
-
   edm::Handle<edm::View<reco::Electron> > els_h;
   if(ElectronInputTag.label() !="unused") {
     iEvent.getByLabel(ElectronInputTag, els_h);
@@ -199,6 +216,16 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     if(genjet_it->pt()>40 && genjet_it->eta() < 3) *gen_ht += genjet_it->pt();
 
   } 
+
+  reco::GenMET genmet_obj(genmet_h->at(0));
+  *gen_met = genmet_obj.pt();
+  
+  reco::GenMET genmetcalo_obj(genmetcalo_h->at(0));
+  *gen_metcalo = genmetcalo_obj.pt();
+  
+  reco::GenMET genmetcalononprompt_obj(genmetcalononprompt_h->at(0));
+  *gen_metcalononprompt = genmetcalononprompt_obj.pt();
+
   // Turn on curve for L1 HTT200 (calculated by Dominick)
   *wl1ht200 = (0.5*TMath::Erf((1.35121e-02)*(*gen_ht-(3.02695e+02)))+0.5);
 
@@ -242,6 +269,9 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
   iEvent.put(pf_ht,   "pfht" );
   iEvent.put(gen_ht,   "genht" );
+  iEvent.put(gen_met,   "genmet" );
+  iEvent.put(gen_metcalo,   "genmetcalo" );
+  iEvent.put(gen_metcalononprompt,   "genmetcalononprompt" );
   iEvent.put(wl1ht200,   "wl1ht200" );
 
   iEvent.put(pf_mht_pt,   "pfmhtpt" );
