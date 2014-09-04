@@ -37,7 +37,7 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
   gSystem->mkdir(ntupledir);
 
   int totentries;
-  float onmet, onmet_eta, onmet_phi, onht, weight, wl1ht200, genht, genmet;
+  float onmet, onmet_phi, onht, weight, wl1ht200, genht, genmet;
   //vector<int_double> sorted; 
   int nels, ngenels, nmus, ngenmus, njets, ngenjets;
   vector<double> elspt, elseta, elsphi, genelspt, genelseta, genelsphi;
@@ -47,7 +47,6 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
   TChain chain("Events");
   TTree tree("tree", "tree");
   tree.Branch("onmet", &onmet);
-  tree.Branch("onmet_eta", &onmet_eta);
   tree.Branch("onmet_phi", &onmet_phi);
   tree.Branch("onht", &onht);
   tree.Branch("weight", &weight);
@@ -111,10 +110,10 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
 	if(mus_pt().size()==0 && els_pt().size()==0) continue;
 	onht = pf_ht();
 	onmet = met_pt();
-	onmet_eta = met_eta();
 	onmet_phi = met_phi();
 	genht = gen_ht();
 	genmet = gen_met();
+	// Sort object lists in terms of pt, and save them
 	sortlists(nmus, &muspt, &museta, &musphi, mus_pt(), mus_eta(), mus_phi());
 	sortlists(ngenmus, &genmuspt, &genmuseta, &genmusphi, genmus_pt(), genmus_eta(), genmus_phi());
 	sortlists(nels, &elspt, &elseta, &elsphi, els_pt(), els_eta(), els_phi());
@@ -147,7 +146,7 @@ void sortlists(int &nlist, vector<double> *pt, vector<double> *eta, vector<doubl
 
   nlist = static_cast<int>(treept.size());
   vector<int_double> sorted; 
-  pt->resize(0); sorted.resize(0);
+  pt->resize(0); eta->resize(0); phi->resize(0); sorted.resize(0);
   for(int ind(0); ind<nlist; ind++)
     sorted.push_back(make_pair(ind,treept[ind]));
   sort(sorted.begin(), sorted.end(), id_big2small);
