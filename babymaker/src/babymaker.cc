@@ -177,13 +177,32 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   auto ngenlep = make_auto(new unsigned int);
 
   edm::Handle<edm::View<reco::PFJet> > jet_h;
-  iEvent.getByLabel(hltPfJetsInputTag, jet_h);
+  if(hltPfJetsInputTag.label() != "unused"){
+    iEvent.getByLabel(hltPfJetsInputTag, jet_h);
+    for(auto jet_it = jet_h->begin(); jet_it != jet_h->end(); ++jet_it){
+      if(jet_it->pt() < 35.0) continue;
+      pfjets_pt  ->push_back(jet_it->pt());
+      pfjets_eta ->push_back(jet_it->eta());
+      pfjets_phi ->push_back(jet_it->phi());
+    } 
+  }
 
   edm::Handle<edm::View<reco::MET> > pfht_h;
-  iEvent.getByLabel(hltPfHTInputTag, pfht_h);
+  if(hltPfHTInputTag.label() != "unused"){
+    iEvent.getByLabel(hltPfHTInputTag, pfht_h);
+    *pf_ht    = (pfht_h->front()).sumEt();
+    *pf_mht_pt    = (pfht_h->front()).pt();
+    *pf_mht_eta   = (pfht_h->front()).eta();
+    *pf_mht_phi   = (pfht_h->front()).phi();
+  }
 
   edm::Handle<edm::View<reco::MET> > met_h;
-  iEvent.getByLabel(hltPfMetInputTag, met_h);
+  if(hltPfMetInputTag.label() != "unused"){
+    iEvent.getByLabel(hltPfMetInputTag, met_h);
+    *met_pt   = (met_h->front()).pt();
+    *met_eta  = (met_h->front()).eta();
+    *met_phi  = (met_h->front()).phi();
+  }
 
   edm::Handle<edm::View<reco::GenJet> > genjet_h;
   iEvent.getByLabel(hltGenJetsInputTag, genjet_h);
@@ -205,16 +224,46 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   //iEvent.getByLabel("hltL3CombinedSecondaryVertexBJetTags", btag_h) ;
   
   edm::Handle<reco::MuonCollection> reco_muon_h;
-  iEvent.getByLabel(recoMuonInputTag, reco_muon_h);
+  if(recoMuonInputTag.label() != "unused"){
+    iEvent.getByLabel(recoMuonInputTag, reco_muon_h);
+    for(auto reco_muon_it = reco_muon_h->begin(); reco_muon_it!=reco_muon_h->end(); ++reco_muon_it){
+      reco_mus_pt ->push_back(reco_muon_it->pt());
+      reco_mus_eta->push_back(reco_muon_it->eta());
+      reco_mus_phi->push_back(reco_muon_it->phi());
+    }
+  }
 
   edm::Handle<reco::GsfElectronCollection> reco_electron_h;
-  iEvent.getByLabel(recoElectronInputTag, reco_electron_h);
+  if(recoElectronInputTag.label() != "unused"){
+    iEvent.getByLabel(recoElectronInputTag, reco_electron_h);
+    for(auto reco_electron_it = reco_electron_h->begin(); reco_electron_it!=reco_electron_h->end(); ++reco_electron_it){
+      reco_els_pt ->push_back(reco_electron_it->pt());
+      reco_els_eta->push_back(reco_electron_it->eta());
+      reco_els_phi->push_back(reco_electron_it->phi());
+    }
+  }
 
   edm::Handle<reco::PFJetCollection> reco_jet_h;
-  iEvent.getByLabel(recoPfJetsInputTag, reco_jet_h);
+  if(recoPfJetsInputTag.label() != "unused"){
+    iEvent.getByLabel(recoPfJetsInputTag, reco_jet_h);
+    for(auto reco_jet_it = reco_jet_h->begin(); reco_jet_it!=reco_jet_h->end(); ++reco_jet_it){
+      if(reco_jet_it->pt()<35.0) continue;
+      reco_jet_pt->push_back(reco_jet_it->pt());
+      reco_jet_eta->push_back(reco_jet_it->eta());
+      reco_jet_phi->push_back(reco_jet_it->phi());
+    }
+  }
 
   edm::Handle<reco::GenJetCollection> reco_genjet_h;
-  iEvent.getByLabel(recoGenJetsInputTag, reco_genjet_h);
+  if(recoGenJetsInputTag.label() != "unused"){
+    iEvent.getByLabel(recoGenJetsInputTag, reco_genjet_h);
+    for(auto reco_genjet_it = reco_genjet_h->begin(); reco_genjet_it!=reco_genjet_h->end(); ++reco_genjet_it){
+      if(reco_genjet_it->pt()<35.0) continue;
+      reco_genjet_pt->push_back(reco_genjet_it->pt());
+      reco_genjet_eta->push_back(reco_genjet_it->eta());
+      reco_genjet_phi->push_back(reco_genjet_it->phi());
+    }
+  }
 
   *ngenlep = 0;
   for (auto genp = genparts->cbegin(); genp != genparts->cend(); ++genp ) {
@@ -260,13 +309,6 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     } 
   }
 
-  for(auto jet_it = jet_h->begin(); jet_it != jet_h->end(); ++jet_it){
-
-    if(jet_it->pt() < 35.0) continue;
-    pfjets_pt  ->push_back(jet_it->pt());
-    pfjets_eta ->push_back(jet_it->eta());
-    pfjets_phi ->push_back(jet_it->phi());
-  } 
   *gen_ht = 0;
   for(auto genjet_it = genjet_h->begin(); genjet_it != genjet_h->end(); ++genjet_it){
 
@@ -280,31 +322,6 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
   }
 
-  for(auto reco_muon_it = reco_muon_h->begin(); reco_muon_it!=reco_muon_h->end(); ++reco_muon_it){
-    reco_mus_pt ->push_back(reco_muon_it->pt());
-    reco_mus_eta->push_back(reco_muon_it->eta());
-    reco_mus_phi->push_back(reco_muon_it->phi());
-  }
-
-  for(auto reco_electron_it = reco_electron_h->begin(); reco_electron_it!=reco_electron_h->end(); ++reco_electron_it){
-    reco_els_pt ->push_back(reco_electron_it->pt());
-    reco_els_eta->push_back(reco_electron_it->eta());
-    reco_els_phi->push_back(reco_electron_it->phi());
-  }
-
-  for(auto reco_jet_it = reco_jet_h->begin(); reco_jet_it!=reco_jet_h->end(); ++reco_jet_it){
-    if(reco_jet_it->pt()<35.0) continue;
-    reco_jet_pt->push_back(reco_jet_it->pt());
-    reco_jet_eta->push_back(reco_jet_it->eta());
-    reco_jet_phi->push_back(reco_jet_it->phi());
-  }
- 
-  for(auto reco_genjet_it = reco_genjet_h->begin(); reco_genjet_it!=reco_genjet_h->end(); ++reco_genjet_it){
-    if(reco_genjet_it->pt()<35.0) continue;
-    reco_genjet_pt->push_back(reco_genjet_it->pt());
-    reco_genjet_eta->push_back(reco_genjet_it->eta());
-    reco_genjet_phi->push_back(reco_genjet_it->phi());
-  }
  
   reco::GenMET genmet_obj(genmet_h->at(0));
   *gen_met = genmet_obj.pt();
@@ -318,15 +335,7 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   // Turn on curve for L1 HTT200 (calculated by Dominick)
   *wl1ht200 = (0.5*TMath::Erf((1.35121e-02)*(*gen_ht-(3.02695e+02)))+0.5);
 
-  *met_pt   = (met_h->front()).pt();
-  *met_eta  = (met_h->front()).eta();
-  *met_phi  = (met_h->front()).phi();
 
-  *pf_ht    = (pfht_h->front()).sumEt();
-
-  *pf_mht_pt    = (pfht_h->front()).pt();
-  *pf_mht_eta   = (pfht_h->front()).eta();
-  *pf_mht_phi   = (pfht_h->front()).phi();
 
   iEvent.put(els_pt,   "elspt" );
   iEvent.put(els_eta,  "elseta" );
