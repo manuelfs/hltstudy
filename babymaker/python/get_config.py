@@ -145,7 +145,7 @@ def WriteSchedule(file, path_list, path_opt):
         for path in to_schedule:
             if 0 < path <= len(names):
                 if not path in already_added:
-                    file.write('process.schedule'+names[path-1]+', ')
+                    file.write('process.'+names[path-1]+', ')
                     already_added.add(path)
                 else:
                     print 'Warning: WriteSchedule has already scheduled path #'+str(path)+' ('+names[path-1]+') and will not schedule it again.'
