@@ -100,7 +100,7 @@ def GetPathDef(path):
         raise Exception("GetPathDef could not find path definition in " + stripped)
         return ''
 
-def WriteSchedule(file, path_list):
+def WriteSchedule(file, path_list, path_opt):
     seq_lines = []
     path_lines = []
     names = []
@@ -124,9 +124,34 @@ def WriteSchedule(file, path_list):
         file.write(path)
     file.write("\n")
 
+    to_schedule = [1]
+    if path_opt == 'all':
+        to_schedule = [i for i in range(1,len(names)+1)]
+    elif path_opt == 'select':
+        print 'Available paths:'
+        for i in range(0,len(names)):
+            print '\t'+str(i+1)+': \t'+names[i]
+        print ''
+
+        to_schedule = raw_input('Enter comma separated list of paths to schedule: ').split(',')
+        if to_schedule == ['']:
+            to_schedule = []
+        else:
+            to_schedule = [int(i) for i in to_schedule]
+
     if len(names) > 0:
-        file.write('process.schedule = cms.Schedule( process.' + names[0] + ', process.outpath ) ##\n')            
-        file.write("\n")
+        file.write('process.schedule = cms.Schedule( ')
+        already_added = set()
+        for path in to_schedule:
+            if 0 < path <= len(names):
+                if not path in already_added:
+                    file.write('process.schedule'+names[path-1]+', ')
+                    already_added.add(path)
+                else:
+                    print 'Warning: WriteSchedule has already scheduled path #'+str(path)+' ('+names[path-1]+') and will not schedule it again.'
+            else:
+                print 'Warning: WriteSchedule does not know about path #'+str(path)+' and will skip it.'
+        file.write('process.outpath ) ##\n\n')
 
 def WriteCustomization(file):
     file.write("##\n")
@@ -134,24 +159,29 @@ def WriteCustomization(file):
     file.write("process = customise_HLT( process )\n")
 
 parser = argparse.ArgumentParser(
-    description = 'Gets a configuration file and adds RECO products to the output.'
+    description = 'Gets a configuration file and adds RECO products to the output.',
+    formatter_class = argparse.ArgumentDefaultsHelpFormatter
     )
 
 parser.add_argument('config',
                     help = 'A confDB HLT configuration path')
 parser.add_argument('--output',
                     default = 'config.py',
-                    help = 'File to with python configuration is written')
+                    help = 'File to python configuration to')
 parser.add_argument('--input',
                     default = 'file:/nfs-7/userdata/jaehyeok/HLT/ttbar-13tev-850evts.root',
                     help = 'Path to input data file')
 parser.add_argument('--max-events',
                     type = int,
-                    default = -1,
+                    default = 20,
                     dest = 'maxevents',
                     metavar = 'EVENTS',
-                    help = 'Maximum number of events to run on (-1 for all events)')
-                    
+                    help = 'Maximum number of events to run on, -1 for all events')
+parser.add_argument('--paths',
+                    metavar = 'PATH_OPT',
+                    choices=['select','first','all'],
+                    default='select',
+                    help = 'Choose to schedule manually selected paths, the first path, or all paths; options are %(choices)s')
 
 args = parser.parse_args()
 
@@ -184,13 +214,6 @@ path_list = []
 for line in lines:
     if line.find('process.HLTConfigVersion = cms.PSet(') != -1:
         WriteConfig(output_file)
-#    Uncommented these lines to make Manuel's muon configuration from ConfDB work
-#    elif line.find('hltESPAK4PFL1L2L3') != -1:
-#        line = line.replace('hltESPAK4PFL1L2L3','hltESPAK4PFCorrection')
-#    elif line.find('hltESPAK4PFNoPUL1L2L3') != -1:
-#        line = line.replace('hltESPAK4PFNoPUL1L2L3','hltESPAK4PFCorrection')
-#    elif line.find('hltESPAK4CaloL1L2L3') != -1:
-#        line = line.replace('hltESPAK4CaloL1L2L3','hltESPAK4CaloCorrection')
     elif line.find("process.HLT") != -1 and line.find("cms.Path") != -1:
         path_list.extend([line])
         line = ''
@@ -202,7 +225,7 @@ for line in lines:
         line = line.replace("True","False")
     elif line.find('# override the GlobalTag, connection string and pfnPrefix') != -1:
         WriteOutput(output_file)
-        WriteSchedule(output_file, path_list)
+        WriteSchedule(output_file, path_list, args.paths)
 
     output_file.write(line)
 
