@@ -1,3 +1,7 @@
+# Specific files automatically generated
+ScanChain.C
+doAll.C
+
 # Compiled Object files
 *.slo
 *.lo

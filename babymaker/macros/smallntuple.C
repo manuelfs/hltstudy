@@ -29,6 +29,9 @@ vector<TString> dirlist(TString folder, TString inname="dir", TString tag="");
 float cross_section(TString file);
 void sortlists(int &nlist, vector<double> *pt, vector<double> *eta, vector<double> *phi,
 	       const vector<float> treept, const vector<float> treeeta, const vector<float> treephi);
+double deltaphi(double phi1, double phi2);
+float dR(float eta1, float eta2, float phi1, float phi2);
+void ngenleptons(TString filename, vector<int> &nori_genels, vector<int> &nori_genmus, vector<int> genlep_thresh);
 
 void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString subfolder="test",
 		 TString tagFolders="", int maxfiles=-1){
@@ -37,7 +40,8 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
   gSystem->mkdir(ntupledir);
 
   int totentries;
-  float onmet, onmet_phi, onht, weight, wl1ht200, genht, genmet;
+  vector<int> genlep_thresh, nori_genels, nori_genmus;
+  float onmet, onmet_phi, onht, weight, wl1ht200, genht, genmet, mindr_mu, mindr2_mu, mindr_genmu;
   //vector<int_double> sorted; 
   int nels, ngenels, nmus, ngenmus, njets, ngenjets;
   vector<double> elspt, elseta, elsphi, genelspt, genelseta, genelsphi;
@@ -46,6 +50,9 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
   const float luminosity = 19600;
   TChain chain("Events");
   TTree tree("tree", "tree");
+  tree.Branch("mindr_mu", &mindr_mu);
+  tree.Branch("mindr2_mu", &mindr2_mu);
+  tree.Branch("mindr_genmu", &mindr_genmu);
   tree.Branch("onmet", &onmet);
   tree.Branch("onmet_phi", &onmet_phi);
   tree.Branch("onht", &onht);
@@ -78,8 +85,17 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
   tree.Branch("njets", &njets);
   tree.Branch("ngenjets", &ngenjets);
 
+  genlep_thresh.push_back(0); genlep_thresh.push_back(10); 
+  genlep_thresh.push_back(15); genlep_thresh.push_back(17); 
+  genlep_thresh.push_back(20); genlep_thresh.push_back(25); 
+  for(unsigned ind(0); ind<genlep_thresh.size(); ind++){
+    nori_genmus.push_back(0); nori_genels.push_back(0);
+  }
   TTree treeglobal("treeglobal", "treeglobal");
   treeglobal.Branch("noriginal", &totentries);
+  treeglobal.Branch("nori_genmus", &nori_genmus);
+  treeglobal.Branch("nori_genels", &nori_genels);
+  treeglobal.Branch("genlep_thresh", &genlep_thresh);
 
   TString filename, rootname, sampledir;
   vector<TString> dirs = dirlist(folder, "dir", tagFolders);
@@ -111,11 +127,38 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
 	onht = pf_ht();
 	onmet = met_pt();
 	onmet_phi = met_phi();
-	genht = gen_ht();
-	genmet = gen_met();
+	genht = 0;
+	for(unsigned ijet(0); ijet < genjets_pt().size(); ijet++)
+	  if(genjets_pt().at(ijet)>40 && genjets_eta().at(ijet)<3) genht += genjets_pt().at(ijet);
+	//genht = gen_ht();
+	//genmet = gen_met();
 	// Sort object lists in terms of pt, and save them
 	sortlists(nmus, &muspt, &museta, &musphi, mus_pt(), mus_eta(), mus_phi());
+	mindr_mu = 999;
+	mindr2_mu = 999;
+	if(museta.size() > 0){
+	  float mueta(museta[0]), muphi(musphi[0]);
+	  for(unsigned ijet(0); ijet < pfjets_pt().size(); ijet++){
+	    if(pfjets_pt()[ijet] < 50) continue;
+	    float dRjet(dR(mueta, pfjets_eta()[ijet], muphi, pfjets_phi()[ijet]));
+	    if(dRjet < mindr2_mu) {
+	      if(dRjet < mindr_mu){
+		mindr2_mu = mindr_mu;
+		mindr_mu = dRjet;
+	      } else mindr2_mu = dRjet;
+	    }
+	  }
+	}
 	sortlists(ngenmus, &genmuspt, &genmuseta, &genmusphi, genmus_pt(), genmus_eta(), genmus_phi());
+	mindr_genmu = 999;
+	if(genmuseta.size() > 0){
+	  float genmueta(genmuseta[0]), genmuphi(genmusphi[0]);
+	  for(unsigned ijet(0); ijet < genjets_pt().size(); ijet++){
+	    if(genjets_pt()[ijet] < 50) continue;
+	    float dRjet(dR(genmueta, genjets_eta()[ijet], genmuphi, genjets_phi()[ijet]));
+	    if(dRjet < mindr_genmu) mindr_genmu = dRjet;
+	  }
+	}
 	sortlists(nels, &elspt, &elseta, &elsphi, els_pt(), els_eta(), els_phi());
 	sortlists(ngenels, &genelspt, &genelseta, &genelsphi, genels_pt(), genels_eta(), genels_phi());
 	sortlists(njets, &jetspt, &jetseta, &jetsphi, pfjets_pt(), pfjets_eta(), pfjets_phi());
@@ -127,12 +170,42 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
       chain.Reset(); 
     } // Loop over files in the sample folder
     tree.Write();
+    ngenleptons(filename, nori_genels, nori_genmus, genlep_thresh);
     treeglobal.Fill();
     treeglobal.Write();
     rootfile.Close();
     cout<<"Written tree "<<filename<<endl;
     tree.Reset(); treeglobal.Reset();
   } // Loop over sample folders
+}
+
+void ngenleptons(TString filename, vector<int> &nori_genels, vector<int> &nori_genmus, vector<int> genlep_thresh){
+  if(filename.Contains("T1tttt")) {
+    for(unsigned ind(0); ind<nori_genels.size(); ind++){
+      nori_genels[ind] = 0; nori_genmus[ind] = 0;
+    }
+    TChain chain("Events");
+    if(filename.Contains("1025_")) chain.Add("ntuples/babies/gen/ntuple_gen_T1tttt_1025.root");
+    else chain.Add("ntuples/babies/gen/ntuple_gen_T1tttt_825.root");
+    hlt_class hltgen;
+    hltgen.Init(&chain);
+    long entries(chain.GetEntries());
+    for(int entry(0); entry<entries; entry++){
+      hltgen.GetEntry(entry);
+      for(unsigned ithresh(0); ithresh<genlep_thresh.size(); ithresh++){
+	for(unsigned lep(0); lep<hltgen.genels_pt().size(); lep++)
+	  if(hltgen.genels_pt()[lep] >= genlep_thresh[ithresh]) {
+	    nori_genels[ithresh]++;
+	    break;
+	  }
+	for(unsigned lep(0); lep<hltgen.genmus_pt().size(); lep++)
+	  if(hltgen.genmus_pt()[lep] >= genlep_thresh[ithresh]) {
+	    nori_genmus[ithresh]++;
+	    break;
+	  }
+      } // Loop over lepton pT thresholds
+    } // Loop over chain entries
+  } else return;
 }
 
 // Definitions to sort vectors
@@ -169,7 +242,7 @@ vector<TString> dirlist(TString folder, TString inname, TString tag){
     while ((file=(TSystemFile*)next())) {
       fname = file->GetName();
       if (inname=="dir") {
-	if ((file->IsDirectory() && !fname.Contains(".") && fname.Contains(tag))) v_dirs.push_back(fname);
+	if ((file->IsDirectory() && !fname.Contains(".") && fname.EndsWith(tag))) v_dirs.push_back(fname);
       } else  if(fname.Contains(inname)) v_dirs.push_back(fname);
     }
   } // if(files)
@@ -215,5 +288,16 @@ float cross_section(TString file){
   if(file.Contains("QCD_Pt-3200"))       xsec = 0.000163;
 
   return xsec;
+}
+
+double deltaphi(double phi1, double phi2){
+  double result = fabs(phi1-phi2);
+  while (result>TMath::Pi()) result -= 2*TMath::Pi();
+  while (result<=-TMath::Pi()) result += 2*TMath::Pi();
+  return result;
+}
+
+float dR(float eta1, float eta2, float phi1, float phi2) {
+  return sqrt(pow(eta1-eta2, 2) + pow(deltaphi(phi1,phi2), 2)) ;
 }
 
