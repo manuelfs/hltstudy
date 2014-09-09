@@ -28,7 +28,11 @@ private:
     edm::InputTag pfMetInputTag;
     edm::InputTag pfHTInputTag;
     edm::InputTag genJetsInputTag;
-    
+    edm::InputTag m_Jets;   
+    edm::InputTag m_JetTags; 
+  
+    edm::EDGetTokenT<std::vector<reco::CaloJet> > m_JetsToken; 
+    edm::EDGetTokenT<reco::JetTagCollection> m_JetTagsToken;
 };
 
 

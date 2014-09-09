@@ -2,6 +2,7 @@
 
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDProducer.h"
+#include "FWCore/Framework/interface/EDConsumerBase.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
@@ -12,6 +13,9 @@
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
 #include "DataFormats/METReco/interface/GenMET.h"
+#include "DataFormats/JetReco/interface/Jet.h"
+#include "DataFormats/JetReco/interface/CaloJet.h"
+#include "DataFormats/BTauReco/interface/JetTag.h"
 
 #include "hltstudy/babymaker/interface/babymaker.h"
 
@@ -37,6 +41,11 @@ babymaker::babymaker(const edm::ParameterSet& iConfig) {
   produces<std::vector<float> > ("pfjetspt").setBranchAlias("pfjets_pt");
   produces<std::vector<float> > ("pfjetseta").setBranchAlias("pfjets_eta");
   produces<std::vector<float> > ("pfjetsphi").setBranchAlias("pfjets_phi");
+  
+  produces<std::vector<float> > ("bjetspt").setBranchAlias("bjets_pt");
+  produces<std::vector<float> > ("bjetseta").setBranchAlias("bjets_eta");
+  produces<std::vector<float> > ("bjetsphi").setBranchAlias("bjets_phi");
+  produces<std::vector<float> > ("bjetscsv").setBranchAlias("bjets_csv");
 
   produces<std::vector<float> > ("genjetspt").setBranchAlias("genjets_pt");
   produces<std::vector<float> > ("genjetseta").setBranchAlias("genjets_eta");
@@ -66,6 +75,11 @@ babymaker::babymaker(const edm::ParameterSet& iConfig) {
   pfMetInputTag = iConfig.getParameter<edm::InputTag>("pfMetInputTag_");
   pfHTInputTag = iConfig.getParameter<edm::InputTag>("pfHTInputTag_");
   genJetsInputTag = iConfig.getParameter<edm::InputTag>("genJetsInputTag_");
+  // btagging
+  m_Jets   =  iConfig.getParameter<edm::InputTag>("m_Jets_");
+  m_JetTags = iConfig.getParameter<edm::InputTag>("m_JetTags_"); 
+  m_JetsToken = consumes<std::vector<reco::CaloJet> >(m_Jets);
+  m_JetTagsToken = consumes<reco::JetTagCollection>(m_JetTags);
 }
 
 
@@ -92,6 +106,11 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   std::auto_ptr<std::vector<float> > pfjets_pt   (new std::vector<float>);
   std::auto_ptr<std::vector<float> > pfjets_eta  (new std::vector<float>);
   std::auto_ptr<std::vector<float> > pfjets_phi  (new std::vector<float>);
+  
+  std::auto_ptr<std::vector<float> > bjets_pt   (new std::vector<float>);
+  std::auto_ptr<std::vector<float> > bjets_eta   (new std::vector<float>);
+  std::auto_ptr<std::vector<float> > bjets_phi   (new std::vector<float>);
+  std::auto_ptr<std::vector<float> > bjets_csv   (new std::vector<float>);
 
   std::auto_ptr<std::vector<float> > genjets_pt   (new std::vector<float>);
   std::auto_ptr<std::vector<float> > genjets_eta  (new std::vector<float>);
@@ -142,17 +161,19 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   edm::Handle<reco::GenParticleCollection> genparts;
   iEvent.getByLabel("genParticles", genparts);
  
-  edm::Handle<edm::View<reco::GenMET> >genmet_h;
+  edm::Handle<edm::View<reco::GenMET> > genmet_h;
   iEvent.getByLabel("genMetTrue", genmet_h);
   
-  edm::Handle<edm::View<reco::GenMET> >genmetcalo_h;
+  edm::Handle<edm::View<reco::GenMET> > genmetcalo_h;
   iEvent.getByLabel("genMetCalo", genmetcalo_h);
   
-  edm::Handle<edm::View<reco::GenMET> >genmetcalononprompt_h;
+  edm::Handle<edm::View<reco::GenMET> > genmetcalononprompt_h;
   iEvent.getByLabel("genMetCaloAndNonPrompt", genmetcalononprompt_h);
 
-  //edm::Handle<reco::JetTagCollection> btag_h ;
-  //iEvent.getByLabel("hltL3CombinedSecondaryVertexBJetTags", btag_h) ;
+  //edm::AssociationVector<edm::RefToBaseProd<reco::Jet>,std::vector<float>,edm::RefToBase<reco::Jet>,unsigned int,edm::helper::AssociationIdenticalKeyReference>
+//  edm::Handle<reco::JetTagCollection> btag_h ;
+  //edm::Handle<edm::View<reco::JetTag> > btag_h ;
+//  iEvent.getByLabel("hltL3CombinedSecondaryVertexBJetTags", btag_h) ;
 
   *ngenlep = 0;
   for (reco::GenParticleCollection::const_iterator genp = genparts->begin(); genp != genparts->end(); ++ genp ) {
@@ -202,7 +223,16 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     if(jet_it->pt() < 35.0) continue;
     pfjets_pt  ->push_back(jet_it->pt());
     pfjets_eta ->push_back(jet_it->eta());
-    pfjets_phi ->push_back(jet_it->phi());
+    pfjets_phi ->push_back(jet_it->phi()); 
+/*
+    const reco::Jet& hltjet = *jet_it;
+    float jcsv = reco::JetFloatAssociation::getValue( *btag_h, hltjet ) ;
+
+    std::cout << "********************************************************************** " << std::endl;
+    std::cout << "************ pfjet pt    : " << jet_it->pt() << std::endl;
+    std::cout << "************ csv         : " << jcsv << std::endl;
+    std::cout << "********************************************************************** " << std::endl;
+*/
   } 
   *gen_ht = 0;
   for(edm::View<reco::GenJet>::const_iterator genjet_it = genjet_h->begin(); genjet_it != genjet_h->end(); genjet_it++){
@@ -225,6 +255,48 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   
   reco::GenMET genmetcalononprompt_obj(genmetcalononprompt_h->at(0));
   *gen_metcalononprompt = genmetcalononprompt_obj.pt();
+
+  // Btagging --------------------------------------- begin
+  typedef std::vector<reco::CaloJet> TCollection;
+  typedef edm::Ref<TCollection> TRef;
+
+  edm::Handle<TCollection> h_Jets;
+  iEvent.getByToken(m_JetsToken, h_Jets);
+
+  edm::Handle<reco::JetTagCollection> h_JetTags;
+  iEvent.getByToken(m_JetTagsToken, h_JetTags);
+
+  TRef jetRef;
+   
+   // Look at all jets in decreasing order of Et.
+   for (reco::JetTagCollection::const_iterator jet = h_JetTags->begin(); jet != h_JetTags->end(); ++jet) {
+     
+     jetRef = TRef(h_Jets,jet->first.key());
+     if(0) 
+     {
+        std::cout << "Jet pT = " << jet->first->pt()
+                  << ", CSV = " << jet->second << std::endl;
+    }
+    
+    bjets_pt ->push_back( jet->first->pt() );
+    bjets_eta ->push_back( jet->first->eta() );
+    bjets_phi ->push_back( jet->first->phi() );
+    bjets_csv ->push_back( jet->second );
+/*
+     // Check if jet is tagged.
+     if ( (m_MinTag <= jet->second) and (jet->second <= m_MaxTag) ) {
+       ++nTag;
+   
+       // Store a reference to the jets which passed tagging cuts
+       //filterproduct.addObject(m_TriggerType,jetRef);
+     }
+*/
+   }
+ 
+  // Btagging --------------------------------------- end 
+
+    
+
 
   // Turn on curve for L1 HTT200 (calculated by Dominick)
   *wl1ht200 = (0.5*TMath::Erf((1.35121e-02)*(*gen_ht-(3.02695e+02)))+0.5);
@@ -250,6 +322,11 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   iEvent.put(pfjets_pt,   "pfjetspt" );
   iEvent.put(pfjets_eta,  "pfjetseta" );
   iEvent.put(pfjets_phi,  "pfjetsphi" );
+
+  iEvent.put(bjets_pt,      "bjetspt" ); 
+  iEvent.put(bjets_eta,     "bjetseta" ); 
+  iEvent.put(bjets_phi,     "bjetsphi" ); 
+  iEvent.put(bjets_csv,     "bjetscsv" ); 
 
   iEvent.put(genjets_pt,   "genjetspt" );
   iEvent.put(genjets_eta,  "genjetseta" );

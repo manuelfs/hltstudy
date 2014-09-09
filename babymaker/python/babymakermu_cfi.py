@@ -10,4 +10,6 @@ babymakermu = cms.EDProducer(
     #pfHTInputTag_       = cms.InputTag("hltPFHTNoPU"),
     pfHTInputTag_           = cms.InputTag("hltPFHT"),
     genJetsInputTag_    = cms.InputTag("ak4GenJetsNoNu"),
+    m_Jets_             = cms.InputTag("hltSelector4CentralJetsL1FastJet"), # btagging 
+    m_JetTags_          = cms.InputTag("hltL3CombinedSecondaryVertexBJetTags"), # btagging 
 )
