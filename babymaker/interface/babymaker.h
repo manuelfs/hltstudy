@@ -34,7 +34,11 @@ class babymaker : public edm::EDProducer {
   edm::InputTag recoPfJetsInputTag;
   edm::InputTag recoPfMetInputTag;
   edm::InputTag recoGenJetsInputTag;
+  edm::InputTag m_Jets;   
+  edm::InputTag m_JetTags; 
   
+  edm::EDGetTokenT<std::vector<reco::CaloJet> > m_JetsToken; 
+  edm::EDGetTokenT<reco::JetTagCollection> m_JetTagsToken;
 };
 
 

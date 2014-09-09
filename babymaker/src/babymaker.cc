@@ -2,6 +2,7 @@
 
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDProducer.h"
+#include "FWCore/Framework/interface/EDConsumerBase.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
@@ -16,6 +17,8 @@
 #include "DataFormats/METReco/interface/GenMET.h"
 #include "DataFormats/METReco/interface/PFMET.h"
 #include "DataFormats/METReco/interface/PFMETCollection.h"
+#include "DataFormats/JetReco/interface/CaloJet.h"
+#include "DataFormats/BTauReco/interface/JetTag.h"
 
 #include "hltstudy/babymaker/interface/babymaker.h"
 
@@ -77,6 +80,12 @@ babymaker::babymaker(const edm::ParameterSet& iConfig) {
   produces<std::vector<float> > ("recogenjetpt") .setBranchAlias("reco_genjet_pt");
   produces<std::vector<float> > ("recogenjeteta").setBranchAlias("reco_genjet_eta");
   produces<std::vector<float> > ("recogenjetphi").setBranchAlias("reco_genjet_phi");
+  
+  produces<std::vector<float> > ("bjetspt").setBranchAlias("bjets_pt");
+  produces<std::vector<float> > ("bjetseta").setBranchAlias("bjets_eta");
+  produces<std::vector<float> > ("bjetsphi").setBranchAlias("bjets_phi");
+  produces<std::vector<float> > ("bjetscsv").setBranchAlias("bjets_csv");
+
 
   produces<float> ("metpt").setBranchAlias("met_pt");
   produces<float> ("meteta").setBranchAlias("met_eta");
@@ -100,6 +109,12 @@ babymaker::babymaker(const edm::ParameterSet& iConfig) {
   recoMuonInputTag = iConfig.getParameter<edm::InputTag>("recoMuonInputTag_");
   recoPfMetInputTag = iConfig.getParameter<edm::InputTag>("recoPfMetInputTag_");
   recoGenJetsInputTag = iConfig.getParameter<edm::InputTag>("recoGenJetsInputTag_");
+  
+  // btagging
+  m_Jets   =  iConfig.getParameter<edm::InputTag>("m_Jets_");
+  m_JetTags = iConfig.getParameter<edm::InputTag>("m_JetTags_"); 
+  m_JetsToken = consumes<std::vector<reco::CaloJet> >(m_Jets);
+  m_JetTagsToken = consumes<reco::JetTagCollection>(m_JetTags);
 }
 
 babymaker::~babymaker() {}
@@ -152,6 +167,11 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   auto reco_genjet_pt  = make_auto(new std::vector<float>);
   auto reco_genjet_eta = make_auto(new std::vector<float>);
   auto reco_genjet_phi = make_auto(new std::vector<float>);
+  
+  auto bjets_pt     = make_auto(new std::vector<float>);
+  auto bjets_eta    = make_auto(new std::vector<float>);
+  auto bjets_phi    = make_auto(new std::vector<float>);
+  auto bjets_csv    = make_auto(new std::vector<float>);
 
   auto met_pt  = make_auto(new float);
   auto met_eta = make_auto(new float);
@@ -331,7 +351,44 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   
   reco::GenMET genmetcalononprompt_obj(genmetcalononprompt_h->at(0));
   *gen_metcalononprompt = genmetcalononprompt_obj.pt();
-  
+
+  // Btagging --------------------------------------- begin
+  typedef std::vector<reco::CaloJet> TCollection;
+  typedef edm::Ref<TCollection> TRef;
+
+  edm::Handle<TCollection> h_Jets;
+  iEvent.getByToken(m_JetsToken, h_Jets);
+
+  edm::Handle<reco::JetTagCollection> h_JetTags;
+  iEvent.getByToken(m_JetTagsToken, h_JetTags);
+
+  TRef jetRef;
+   
+   // Look at all jets in decreasing order of Et.
+   for (reco::JetTagCollection::const_iterator jet = h_JetTags->begin(); jet != h_JetTags->end(); ++jet) {
+     
+     jetRef = TRef(h_Jets,jet->first.key());
+     if(jet->first->pt() < 35) continue;
+
+     if(0) 
+     {
+        std::cout << "Jet pT = " << jet->first->pt()
+                  << ", CSV = " << jet->second << std::endl;
+     }
+    
+     bjets_pt ->push_back( jet->first->pt() );
+     bjets_eta ->push_back( jet->first->eta() );
+     bjets_phi ->push_back( jet->first->phi() );
+     bjets_csv ->push_back( jet->second );
+   
+   }
+ 
+  // Btagging --------------------------------------- end 
+
+    
+
+
+
   // Turn on curve for L1 HTT200 (calculated by Dominick)
   *wl1ht200 = (0.5*TMath::Erf((1.35121e-02)*(*gen_ht-(3.02695e+02)))+0.5);
 
@@ -376,6 +433,11 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   iEvent.put(reco_genjet_pt,  "recogenjetpt");
   iEvent.put(reco_genjet_eta, "recogenjeteta");
   iEvent.put(reco_genjet_phi, "recogenjetphi");
+  
+  iEvent.put(bjets_pt,      "bjetspt" ); 
+  iEvent.put(bjets_eta,     "bjetseta" ); 
+  iEvent.put(bjets_phi,     "bjetsphi" ); 
+  iEvent.put(bjets_csv,     "bjetscsv" ); 
 
   iEvent.put(met_pt,   "metpt" );
   iEvent.put(met_eta,  "meteta" );
