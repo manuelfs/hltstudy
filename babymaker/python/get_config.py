@@ -283,6 +283,7 @@ lines = intermediate_file.readlines()
 for line in lines:
     output_file.write(line.replace('REPLACE',lep_type))
 output_file.close()
+intermediate_file.close()
 
 os.remove(intermediate_file_name)
 os.remove(base_file_name)
