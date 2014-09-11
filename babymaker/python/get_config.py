@@ -2,34 +2,41 @@
 
 import argparse
 import subprocess
+import os
 
-def WriteConfig(file):
+def WriteConfig(file, reco):
+    com = '#'
+    if reco:
+        com = ''
+
     file.write("process.load('hltstudy.babymaker.setup_cff')\n")
-    file.write("process.load('hltstudy.babymaker.babymakermu_cfi')\n")
+    file.write("process.load('hltstudy.babymaker.IsoMuonProducer_cfi')\n")
+    file.write("process.load('hltstudy.babymaker.IsoElectronProducer_cfi')\n")
+    file.write("process.load('hltstudy.babymaker.babymakerREPLACE_cfi')\n")
     file.write("\n")
     file.write("# import of standard configurations\n")
-    file.write("process.load('Configuration.StandardSequences.Services_cff')\n")
-    file.write("process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')\n")
-    file.write("process.load('FWCore.MessageService.MessageLogger_cfi')\n")
-    file.write("process.load('Configuration.EventContent.EventContent_cff')\n")
-    file.write("process.load('SimGeneral.MixingModule.mix_POISSON_average_cfi')\n")
-    file.write("process.load('Configuration.StandardSequences.GeometryRecoDB_cff')\n")
-    file.write("#process.load('Configuration.StandardSequences.MagneticField_38T_cff') #Might want this, but probably okay to omit\n")
-    file.write("process.load('Configuration.StandardSequences.RawToDigi_cff')\n")
-    file.write("process.load('Configuration.StandardSequences.L1Reco_cff')\n")
-    file.write("process.load('Configuration.StandardSequences.Reconstruction_cff')\n")
-    file.write("process.load('Configuration.StandardSequences.EndOfProcess_cff')\n")
-    file.write("#process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff') #Might want this, maybe dangerous to omit\n")
+    file.write(com+"process.load('Configuration.StandardSequences.Services_cff')\n")
+    file.write(com+"process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')\n")
+    file.write(com+"process.load('FWCore.MessageService.MessageLogger_cfi')\n")
+    file.write(com+"process.load('Configuration.EventContent.EventContent_cff')\n")
+    file.write(com+"process.load('SimGeneral.MixingModule.mix_POISSON_average_cfi')\n")
+    file.write(com+"process.load('Configuration.StandardSequences.GeometryRecoDB_cff')\n")
+    file.write(com+"#process.load('Configuration.StandardSequences.MagneticField_38T_cff') #Might want this, but probably okay to omit\n")
+    file.write(com+"process.load('Configuration.StandardSequences.RawToDigi_cff')\n")
+    file.write(com+"process.load('Configuration.StandardSequences.L1Reco_cff')\n")
+    file.write(com+"process.load('Configuration.StandardSequences.Reconstruction_cff')\n")
+    file.write(com+"process.load('Configuration.StandardSequences.EndOfProcess_cff')\n")
+    file.write(com+"#process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff') #Might want this, maybe dangerous to omit\n")
     file.write("\n")
-    file.write("process.esp_SiStripGainESProducer = cms.ESPrefer('SiStripGainESProducer')\n")
-    file.write("process.esp_SiStripQualityESProducer = cms.ESPrefer('SiStripQualityESProducer')\n")
-    file.write("process.esp_EcalTrigTowerConstituentsMapBuilder = cms.ESPrefer('EcalTrigTowerConstituentsMapBuilder','hltESPEcalTrigTowerConstituentsMapBuilder')\n")
-    file.write("process.esp_HcalTopologyIdealEP = cms.ESPrefer('HcalTopologyIdealEP')\n")
-    file.write("process.esp_TrackerGeometricDetESModule = cms.ESPrefer('TrackerGeometricDetESModule')\n")
-    file.write("process.esp_MuonDetLayerGeometryESProducer = cms.ESPrefer('MuonDetLayerGeometryESProducer','hltESPMuonDetLayerGeometryESProducer')\n")
-    file.write("process.esp_TrackerDigiGeometryESModule = cms.ESPrefer('TrackerDigiGeometryESModule')\n")
-    file.write("process.esp_TrackerRecoGeometryESProducer = cms.ESPrefer('TrackerRecoGeometryESProducer','hltESPTrackerRecoGeometryESProducer')\n")
-    file.write("process.esp_GlobalTrackingGeometryESProducer = cms.ESPrefer('GlobalTrackingGeometryESProducer','hltESPGlobalTrackingGeometryESProducer')\n")
+    file.write(com+"process.esp_SiStripGainESProducer = cms.ESPrefer('SiStripGainESProducer')\n")
+    file.write(com+"process.esp_SiStripQualityESProducer = cms.ESPrefer('SiStripQualityESProducer')\n")
+    file.write(com+"process.esp_EcalTrigTowerConstituentsMapBuilder = cms.ESPrefer('EcalTrigTowerConstituentsMapBuilder','hltESPEcalTrigTowerConstituentsMapBuilder')\n")
+    file.write(com+"process.esp_HcalTopologyIdealEP = cms.ESPrefer('HcalTopologyIdealEP')\n")
+    file.write(com+"process.esp_TrackerGeometricDetESModule = cms.ESPrefer('TrackerGeometricDetESModule')\n")
+    file.write(com+"process.esp_MuonDetLayerGeometryESProducer = cms.ESPrefer('MuonDetLayerGeometryESProducer','hltESPMuonDetLayerGeometryESProducer')\n")
+    file.write(com+"process.esp_TrackerDigiGeometryESModule = cms.ESPrefer('TrackerDigiGeometryESModule')\n")
+    file.write(com+"process.esp_TrackerRecoGeometryESProducer = cms.ESPrefer('TrackerRecoGeometryESProducer','hltESPTrackerRecoGeometryESProducer')\n")
+    file.write(com+"process.esp_GlobalTrackingGeometryESProducer = cms.ESPrefer('GlobalTrackingGeometryESProducer','hltESPGlobalTrackingGeometryESProducer')\n")
     file.write("\n")
 
 def WriteGenJets(file):
@@ -42,23 +49,31 @@ def WriteGenJets(file):
     file.write("    )\n")
     file.write("\n")
 
-def WriteMixing(file):
+def WriteMixing(file, reco):
+    com = '#'
+    if reco:
+        com = ''
+
     file.write("# Pileup mixing\n")
-    file.write("process.mix.input.nbPileupEvents.averageNumber = cms.double(40.000000)\n")
-    file.write("process.mix.bunchspace = cms.int32(25)\n")
-    file.write("process.mix.minBunch = cms.int32(-12)\n")
-    file.write("process.mix.maxBunch = cms.int32(3)\n")
-    file.write("process.mix.input.fileNames = cms.untracked.vstring(['/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/001CB469-A91E-E311-9BFE-0025907FD24A.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/009CB248-A81C-E311-ACD8-00259073E4F0.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/009F81D5-B21C-E311-966C-BCAEC50971D0.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/00B5BB8C-A91E-E311-816A-782BCB1F5E6B.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/00B8F676-BA1C-E311-BA87-0019B9CABFB6.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/00DD7446-B51D-E311-B714-001E6739CEB1.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/021E1B53-101D-E311-886F-00145EDD7569.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/022A782D-A51C-E311-9856-80000048FE80.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/026FE678-BA1C-E311-BEF5-00D0680BF90A.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/02A10BDE-B21C-E311-AB59-00266CF327C0.root'])\n")
-    file.write("from Configuration.AlCa.GlobalTag import GlobalTag\n")
-    file.write("process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:startup', '')\n")
+    file.write(com+"process.mix.input.nbPileupEvents.averageNumber = cms.double(40.000000)\n")
+    file.write(com+"process.mix.bunchspace = cms.int32(25)\n")
+    file.write(com+"process.mix.minBunch = cms.int32(-12)\n")
+    file.write(com+"process.mix.maxBunch = cms.int32(3)\n")
+    file.write(com+"process.mix.input.fileNames = cms.untracked.vstring(['/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/001CB469-A91E-E311-9BFE-0025907FD24A.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/009CB248-A81C-E311-ACD8-00259073E4F0.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/009F81D5-B21C-E311-966C-BCAEC50971D0.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/00B5BB8C-A91E-E311-816A-782BCB1F5E6B.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/00B8F676-BA1C-E311-BA87-0019B9CABFB6.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/00DD7446-B51D-E311-B714-001E6739CEB1.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/021E1B53-101D-E311-886F-00145EDD7569.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/022A782D-A51C-E311-9856-80000048FE80.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/026FE678-BA1C-E311-BEF5-00D0680BF90A.root', '/store/mc/Fall13/MinBias_TuneA2MB_13TeV-pythia8/GEN-SIM/POSTLS162_V1-v1/10000/02A10BDE-B21C-E311-AB59-00266CF327C0.root'])\n")
+    file.write(com+"from Configuration.AlCa.GlobalTag import GlobalTag\n")
+    file.write(com+"process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:startup', '')\n")
     file.write("\n")
 
-def WriteOutput(file):
+def WriteOutput(file, reco):
+    com = '#'
+    if reco:
+        com = ''
+
     file.write("# Output\n")
     file.write("process.load('FWCore.MessageService.MessageLogger_cfi')\n")
     file.write("process.out = cms.OutputModule(\n")
     file.write("        'PoolOutputModule',\n")
-    file.write("        fileName     = cms.untracked.string('ntuple_hlt_mu15.root'), ##\n")
+    file.write("        fileName     = cms.untracked.string('ntuple_hlt_REPLACE.root'), ##\n")
     file.write("        dropMetaData = cms.untracked.string('ALL')\n")
     file.write("        #SelectEvents = cms.untracked.PSet(\n")
     file.write("            #SelectEvents = cms.vstring('HLT_L1HTT')\n")
@@ -69,14 +84,16 @@ def WriteOutput(file):
     file.write("\n")
     file.write("process.out.outputCommands = cms.untracked.vstring( 'drop *' ) ##\n")
     file.write("process.out.outputCommands.extend(cms.untracked.vstring('keep *_*babymaker*_*_*')) ##\n")
+    file.write("process.out.outputCommands.extend(cms.untracked.vstring('keep *_*IsoMuonProducer*_*_*')) ##\n")
+    file.write("process.out.outputCommands.extend(cms.untracked.vstring('keep *_*IsoElectronProducer*_*_*')) ##\n")
     file.write("\n")
     file.write("# Path and EndPath definitions for RECO\n")
-    file.write("process.raw2digi_step = cms.Path(process.RawToDigi)\n")
-    file.write("process.L1Reco_step = cms.Path(process.L1Reco)\n")
-    file.write("process.reconstruction_step = cms.Path(process.reconstruction)\n")
-    file.write("process.endjob_step = cms.EndPath(process.endOfProcess)\n")
+    file.write(com+"process.raw2digi_step = cms.Path(process.RawToDigi)\n")
+    file.write(com+"process.L1Reco_step = cms.Path(process.L1Reco)\n")
+    file.write(com+"process.reconstruction_step = cms.Path(process.reconstruction)\n")
+    file.write(com+"process.endjob_step = cms.EndPath(process.endOfProcess)\n")
     file.write("\n")
-    file.write("process.reco = cms.Sequence( process.RawToDigi + process.L1Reco + process.reconstruction + process.endOfProcess )\n")
+    file.write(com+"process.reco = cms.Sequence( process.RawToDigi + process.L1Reco + process.reconstruction + process.endOfProcess )\n")
     file.write("\n")
 
 def GetPathName(path):
@@ -100,7 +117,7 @@ def GetPathDef(path):
         raise Exception("GetPathDef could not find path definition in " + stripped)
         return ''
 
-def WriteSchedule(file, path_list, path_opt):
+def WriteSchedule(file, path_list, path_opt, reco):
     seq_lines = []
     path_lines = []
     names = []
@@ -109,8 +126,21 @@ def WriteSchedule(file, path_list, path_opt):
         path_name = GetPathName(path)
         path_def = GetPathDef(path)
 
+        maybe_electron = path_name.find("Ele") != -1
+        maybe_muon = path_name.find("Mu") != -1
+
+        iso_producer = ''
+        if maybe_electron and not maybe_muon:
+            iso_producer = ' + process.IsoElectronProducer'
+        elif maybe_muon and not maybe_electron:
+            iso_producer = ' + process.IsoMuonProducer'
+
+        reco_producer = ''
+        if reco:
+            reco_producer = ' + process.reco'
+
         seq_line = 'process.Seq' + path_name + ' = cms.Sequence( ' + path_def + ' )\n'
-        path_line = 'process.' + path_name + ' = cms.Path( process.Seq' + path_name + ' + process.reco + process.babymaker)\n'
+        path_line = 'process.' + path_name + ' = cms.Path( process.Seq' + path_name + iso_producer + reco_producer + ' + process.babymaker )\n'
 
         names.extend([path_name])
         seq_lines.extend([seq_line])
@@ -139,12 +169,15 @@ def WriteSchedule(file, path_list, path_opt):
         else:
             to_schedule = [int(i) for i in to_schedule]
 
+    lep_type = 'mu'
     if len(names) > 0:
         file.write('process.schedule = cms.Schedule( ')
         already_added = set()
         for path in to_schedule:
             if 0 < path <= len(names):
                 if not path in already_added:
+                    if names[path-1].find('Ele') != -1:
+                        lep_type = 'el'
                     file.write('process.'+names[path-1]+', ')
                     already_added.add(path)
                 else:
@@ -152,6 +185,8 @@ def WriteSchedule(file, path_list, path_opt):
             else:
                 print 'Warning: WriteSchedule does not know about path #'+str(path)+' and will skip it.'
         file.write('process.outpath ) ##\n\n')
+
+    return lep_type
 
 def WriteCustomization(file):
     file.write("##\n")
@@ -164,6 +199,8 @@ parser = argparse.ArgumentParser(
     )
 
 parser.add_argument('config',
+                    nargs='?',
+                    default='/users/jaehyeok/HLTRun2/RA4',
                     help = 'A confDB HLT configuration path')
 parser.add_argument('--output',
                     default = 'config.py',
@@ -182,10 +219,16 @@ parser.add_argument('--paths',
                     choices=['select','first','all'],
                     default='select',
                     help = 'Choose to schedule manually selected paths, the first path, or all paths; options are %(choices)s')
+parser.add_argument('--reco',
+                    action='store_true',
+                    help = 'Enable RECO')
+                    
 
 args = parser.parse_args()
 
 base_file_name = subprocess.check_output('mktemp')[:-1]
+intermediate_file_name = subprocess.check_output('mktemp')[:-1]
+
 base_file = open(base_file_name, 'w')
 subprocess.call(['hltGetConfiguration',
                  args.config,
@@ -205,31 +248,41 @@ subprocess.call(['hltGetConfiguration',
 base_file.close()
 
 base_file = open(base_file_name, 'r')
-lines = base_file.readlines()
-
-output_file = open(args.output, 'w')
+intermediate_file = open(intermediate_file_name, 'w')
 
 path_list = []
+lep_type = 'mu'
 
+lines = base_file.readlines()
 for line in lines:
     if line.find('process.HLTConfigVersion = cms.PSet(') != -1:
-        WriteConfig(output_file)
+        WriteConfig(intermediate_file, args.reco)
     elif line.find("process.HLT") != -1 and line.find("cms.Path") != -1:
         path_list.extend([line])
         line = ''
     elif line.find("process.source") != -1:
-        WriteGenJets(output_file)
+        WriteGenJets(intermediate_file)
     elif line.find("# enable the TrigReport and TimeReport") != -1:
-        WriteMixing(output_file)
+        WriteMixing(intermediate_file, args.reco)
     elif line.find("wantSummary = cms.untracked.bool( True )") != -1:
         line = line.replace("True","False")
     elif line.find('# override the GlobalTag, connection string and pfnPrefix') != -1:
-        WriteOutput(output_file)
-        WriteSchedule(output_file, path_list, args.paths)
+        WriteOutput(intermediate_file, args.reco)
+        lep_type = WriteSchedule(intermediate_file, path_list, args.paths, args.reco)
 
-    output_file.write(line)
+    intermediate_file.write(line)
 
-WriteCustomization(output_file)
+WriteCustomization(intermediate_file)
 
+intermediate_file.close();
 base_file.close()
+
+intermediate_file = open(intermediate_file_name, 'r')
+output_file = open(args.output, 'w')
+lines = intermediate_file.readlines()
+for line in lines:
+    output_file.write(line.replace('REPLACE',lep_type))
 output_file.close()
+
+os.remove(intermediate_file_name)
+os.remove(base_file_name)

@@ -14,6 +14,7 @@
 #include "DataFormats/JetReco/interface/GenJet.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
+//#include "DataFormats/Candidate/interface/Candidate.h"
 #include "DataFormats/METReco/interface/GenMET.h"
 #include "DataFormats/METReco/interface/PFMET.h"
 #include "DataFormats/METReco/interface/PFMETCollection.h"
@@ -60,10 +61,16 @@ babymaker::babymaker(const edm::ParameterSet& iConfig) {
   produces<std::vector<float> > ("genelspt").setBranchAlias("genels_pt");
   produces<std::vector<float> > ("genelseta").setBranchAlias("genels_eta");
   produces<std::vector<float> > ("genelsphi").setBranchAlias("genels_phi");
+  produces<std::vector<int> >   ("genelsmomid").setBranchAlias("genels_mom_id");
+  produces<std::vector<int> >   ("genelsgmomid").setBranchAlias("genels_gmom_id");
+  produces<std::vector<int> >   ("genelsggmomid").setBranchAlias("genels_ggmom_id");
     
   produces<std::vector<float> > ("genmuspt").setBranchAlias("genmus_pt");
   produces<std::vector<float> > ("genmuseta").setBranchAlias("genmus_eta");
   produces<std::vector<float> > ("genmusphi").setBranchAlias("genmus_phi");
+  produces<std::vector<int> >   ("genmusmomid").setBranchAlias("genmus_mom_id");
+  produces<std::vector<int> >   ("genmusgmomid").setBranchAlias("genmus_gmom_id");
+  produces<std::vector<int> >   ("genmusggmomid").setBranchAlias("genmus_ggmom_id");
 
   produces<std::vector<float> > ("recomuspt") .setBranchAlias("reco_mus_pt");
   produces<std::vector<float> > ("recomuseta").setBranchAlias("reco_mus_eta");
@@ -144,13 +151,19 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   auto genjets_eta = make_auto(new std::vector<float>);
   auto genjets_phi = make_auto(new std::vector<float>);
 
-  auto genels_pt  = make_auto(new std::vector<float>);
-  auto genels_eta = make_auto(new std::vector<float>);
-  auto genels_phi = make_auto(new std::vector<float>);
+  auto genels_pt       = make_auto(new std::vector<float>);
+  auto genels_eta      = make_auto(new std::vector<float>);
+  auto genels_phi      = make_auto(new std::vector<float>);
+  auto genels_mom_id   = make_auto(new std::vector<int>);
+  auto genels_gmom_id  = make_auto(new std::vector<int>);
+  auto genels_ggmom_id = make_auto(new std::vector<int>);
 
-  auto genmus_pt  = make_auto(new std::vector<float>);
-  auto genmus_eta = make_auto(new std::vector<float>);
-  auto genmus_phi = make_auto(new std::vector<float>);
+  auto genmus_pt       = make_auto(new std::vector<float>);
+  auto genmus_eta      = make_auto(new std::vector<float>);
+  auto genmus_phi      = make_auto(new std::vector<float>);
+  auto genmus_mom_id   = make_auto(new std::vector<int>);
+  auto genmus_gmom_id  = make_auto(new std::vector<int>);
+  auto genmus_ggmom_id = make_auto(new std::vector<int>);
 
   auto reco_mus_pt  = make_auto(new std::vector<float>);
   auto reco_mus_eta = make_auto(new std::vector<float>);
@@ -289,21 +302,35 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   for (auto genp = genparts->cbegin(); genp != genparts->cend(); ++genp ) {
     if ((genp->status() == 3 || genp->status() == 23) && (abs(genp->pdgId()) == 11 || abs(genp->pdgId()) == 13 || abs(genp->pdgId()) == 15)) (*ngenlep)++;
         
-    if (genp->status() != 3 && genp->status() != 23) continue;  
+    //if (genp->status() != 3 && genp->status() != 23) continue;  
 
     int id = genp->pdgId();
+    const reco::Candidate* mom = genp->mother();
+    int mom_id = mom ? mom->pdgId() : 0;
+    const reco::Candidate* gmom = mom ? mom->mother() : nullptr;
+    int gmom_id = gmom ? gmom->pdgId() : 0;
+    const reco::Candidate* ggmom = gmom ? gmom->mother() : nullptr;
+    int ggmom_id = ggmom ? ggmom->pdgId() : 0;
+
         
     if( TMath::Abs(id) != 11 && TMath::Abs(id) != 13 ) continue; 
+    if( TMath::Abs(mom_id) != 24 && TMath::Abs(gmom_id) != 24 && TMath::Abs(ggmom_id) != 24 ) continue;
         
     if( TMath::Abs(id) == 11 ) {
       genels_pt  ->push_back(genp->p4().pt());
       genels_eta ->push_back(genp->p4().eta());
       genels_phi ->push_back(genp->p4().phi());
+      genels_mom_id->push_back(mom_id);
+      genels_gmom_id->push_back(gmom_id);
+      genels_ggmom_id->push_back(ggmom_id);
     }
     if( TMath::Abs(id) == 13 ) {
       genmus_pt  ->push_back(genp->p4().pt());
       genmus_eta ->push_back(genp->p4().eta());
       genmus_phi ->push_back(genp->p4().phi());
+      genmus_mom_id->push_back(mom_id);
+      genmus_gmom_id->push_back(gmom_id);
+      genmus_ggmom_id->push_back(ggmom_id);
     }
   }
     
@@ -353,35 +380,42 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   *gen_metcalononprompt = genmetcalononprompt_obj.pt();
 
   // Btagging --------------------------------------- begin
-  typedef std::vector<reco::CaloJet> TCollection;
-  typedef edm::Ref<TCollection> TRef;
-
-  edm::Handle<TCollection> h_Jets;
-  iEvent.getByToken(m_JetsToken, h_Jets);
-
-  edm::Handle<reco::JetTagCollection> h_JetTags;
-  iEvent.getByToken(m_JetTagsToken, h_JetTags);
-
-  TRef jetRef;
-   
-   // Look at all jets in decreasing order of Et.
-   for (reco::JetTagCollection::const_iterator jet = h_JetTags->begin(); jet != h_JetTags->end(); ++jet) {
-     
-     jetRef = TRef(h_Jets,jet->first.key());
-     if(jet->first->pt() < 35) continue;
-
-     if(0) 
-     {
-        std::cout << "Jet pT = " << jet->first->pt()
-                  << ", CSV = " << jet->second << std::endl;
-     }
+  if(m_Jets.label() != "unused" && m_JetTags.label() != "unused"){
+    typedef std::vector<reco::CaloJet> TCollection;
+    typedef edm::Ref<TCollection> TRef;
     
-     bjets_pt ->push_back( jet->first->pt() );
-     bjets_eta ->push_back( jet->first->eta() );
-     bjets_phi ->push_back( jet->first->phi() );
-     bjets_csv ->push_back( jet->second );
-   
-   }
+    edm::Handle<TCollection> h_Jets;
+    iEvent.getByToken(m_JetsToken, h_Jets);
+    
+    edm::Handle<reco::JetTagCollection> h_JetTags;
+    iEvent.getByToken(m_JetTagsToken, h_JetTags);
+    
+    TRef jetRef;
+    
+    // Look at all jets in decreasing order of Et.
+    for (reco::JetTagCollection::const_iterator jet = h_JetTags->begin(); jet != h_JetTags->end(); ++jet) {
+      
+      jetRef = TRef(h_Jets,jet->first.key());
+      if(jet->first->pt() < 35) continue;
+      
+      if(0) 
+	{
+	  std::cout << "Jet pT = " << jet->first->pt()
+		    << ", CSV = " << jet->second << std::endl;
+	}
+      
+      bjets_pt ->push_back( jet->first->pt() );
+      bjets_eta ->push_back( jet->first->eta() );
+      bjets_phi ->push_back( jet->first->phi() );
+      bjets_csv ->push_back( jet->second );
+      
+    }
+  }else{
+    bjets_pt->clear();
+    bjets_eta->clear();
+    bjets_phi->clear();
+    bjets_csv->clear();
+  }
  
   // Btagging --------------------------------------- end 
 
@@ -410,13 +444,19 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   iEvent.put(genjets_eta,  "genjetseta" );
   iEvent.put(genjets_phi,  "genjetsphi" );
 
-  iEvent.put(genels_pt,   "genelspt" );
-  iEvent.put(genels_eta,  "genelseta" );
-  iEvent.put(genels_phi,  "genelsphi" );
+  iEvent.put(genels_pt,       "genelspt" );
+  iEvent.put(genels_eta,      "genelseta" );
+  iEvent.put(genels_phi,      "genelsphi" );
+  iEvent.put(genels_mom_id,   "genelsmomid");
+  iEvent.put(genels_gmom_id,  "genelsgmomid");
+  iEvent.put(genels_ggmom_id, "genelsggmomid");
 
-  iEvent.put(genmus_pt,   "genmuspt" );
-  iEvent.put(genmus_eta,  "genmuseta" );
-  iEvent.put(genmus_phi,  "genmusphi" );
+  iEvent.put(genmus_pt,       "genmuspt" );
+  iEvent.put(genmus_eta,      "genmuseta" );
+  iEvent.put(genmus_phi,      "genmusphi" );
+  iEvent.put(genmus_mom_id,   "genmusmomid");
+  iEvent.put(genmus_gmom_id,  "genmusgmomid");
+  iEvent.put(genmus_ggmom_id, "genmusggmomid");
 
   iEvent.put(reco_mus_pt,  "recomuspt");
   iEvent.put(reco_mus_eta, "recomuseta");
