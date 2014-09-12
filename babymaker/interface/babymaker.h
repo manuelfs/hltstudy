@@ -2,7 +2,9 @@
 #define babymaker_H
 
 // system include files
+#include <string>
 #include <memory>
+#include <vector>
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -22,8 +24,18 @@ class babymaker : public edm::EDProducer {
   virtual void endJob() ;
   
   // ----------member data ---------------------------
-  edm::InputTag hltElectronInputTag;
-  edm::InputTag hltMuonInputTag;
+  std::string hltElectronInputString;
+  edm::InputTag hltElectronPtInputTag;
+  edm::InputTag hltElectronPhiInputTag;
+  edm::InputTag hltElectronEtaInputTag;
+  edm::InputTag hltElectronEcalIsoInputTag;
+  edm::InputTag hltElectronHcalIsoInputTag;
+  edm::InputTag hltElectronTrackIsoInputTag;
+  std::string hltMuonInputString;
+  edm::InputTag hltMuonPtInputTag;
+  edm::InputTag hltMuonPhiInputTag;
+  edm::InputTag hltMuonEtaInputTag;
+  edm::InputTag hltMuonIsoInputTag;
   edm::InputTag hltPfJetsInputTag;
   edm::InputTag hltPfMetInputTag;
   edm::InputTag hltPfHTInputTag;

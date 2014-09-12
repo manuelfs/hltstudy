@@ -52,8 +52,6 @@ void IsoMuonProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::Handle<std::vector<reco::RecoChargedCandidate> > muon_handle;
   iEvent.getByToken(iso_token_, iso_handle);
   iEvent.getByToken(cand_token_, muon_handle);
-  //iEvent.getByLabel("hltL3MuonCombRelIsolationsIterTrkRegIter02","combinedRelativeIsoDeposits", iso_handle);
-  //iEvent.getByLabel("hltL3MuonCandidates", muon_handle);
   
   for(auto it = iso_handle->begin(); it != iso_handle->end(); ++it){
     for(auto ite = it.begin(); ite != it.end(); ++ite){

@@ -3,7 +3,9 @@
 #include "hltstudy/babymaker/interface/IsoElectronProducer.hpp"
 
 #include <vector>
-#include <iostream>
+#include <memory>
+#include <algorithm>
+#include <limits>
 
 #include "FWCore/Framework/interface/EDProducer.h"
 #include "FWCore/Utilities/interface/InputTag.h"
@@ -18,6 +20,10 @@
 
 #include "DataFormats/HLTReco/interface/TriggerFilterObjectWithRefs.h"
 #include "DataFormats/HLTReco/interface/TriggerTypeDefs.h"
+
+#include "FWCore/Utilities/interface/Exception.h"
+
+#include "DataFormats/Math/interface/deltaR.h"
 
 namespace{
   template<typename T>
@@ -57,11 +63,19 @@ void IsoElectronProducer::endJob(){
 }
 
 void IsoElectronProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup){
-  auto ele_pt = make_auto(new std::vector<float>);
-  auto ele_phi = make_auto(new std::vector<float>);
-  auto ele_eta = make_auto(new std::vector<float>);
+  auto ele_ecal_pt = make_auto(new std::vector<float>);
+  auto ele_ecal_phi = make_auto(new std::vector<float>);
+  auto ele_ecal_eta = make_auto(new std::vector<float>);
   auto ele_ecal_iso = make_auto(new std::vector<float>);
+  auto ele_ecal_iso_temp = make_auto(new std::vector<float>);
+  auto ele_hcal_pt = make_auto(new std::vector<float>);
+  auto ele_hcal_phi = make_auto(new std::vector<float>);
+  auto ele_hcal_eta = make_auto(new std::vector<float>);
   auto ele_hcal_iso = make_auto(new std::vector<float>);
+  auto ele_hcal_iso_temp = make_auto(new std::vector<float>);
+  auto ele_track_pt = make_auto(new std::vector<float>);
+  auto ele_track_phi = make_auto(new std::vector<float>);
+  auto ele_track_eta = make_auto(new std::vector<float>);
   auto ele_track_iso = make_auto(new std::vector<float>);
   
   edm::Handle<trigger::TriggerFilterObjectWithRefs> ecal_iso_handle;
@@ -83,49 +97,68 @@ void IsoElectronProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSe
   std::vector<reco::RecoEcalCandidateRef> hcal_ref;
   hcal_iso_handle->getObjects(trigger::TriggerCluster, hcal_ref);
   std::vector<reco::RecoEcalCandidateRef> track_ref;
-  track_iso_handle->getObjects(trigger::TriggerCluster, track_ref);
+  track_iso_handle->getObjects(trigger::TriggerPhoton, track_ref);
   
-  for(std::vector<reco::RecoEcalCandidateRef>::const_iterator it = ecal_ref.begin(); it != ecal_ref.end(); ++it){
-    reco::RecoEcalCandidateIsolationMap::const_iterator ecal_mapi = ecal_dep_map->find(*it);
-    float vali = ecal_mapi->val;
-    float energy = (*it)->superCluster()->energy();
-    float etaSC = (*it)->eta();
-    energy *= sin(2.0 * atan(exp(-etaSC)));
-    ele_ecal_iso->push_back(vali/energy);
-    
-    ele_pt->push_back((*it)->pt());
-    ele_phi->push_back((*it)->phi());
-    ele_eta->push_back((*it)->eta());
-  }
+  IsoMapLookup(ecal_ref, ecal_dep_map, ele_ecal_iso_temp, ele_ecal_pt, ele_ecal_phi, ele_ecal_eta);
+  IsoMapLookup(hcal_ref, hcal_dep_map, ele_hcal_iso_temp, ele_hcal_pt, ele_hcal_phi, ele_hcal_eta);
+  IsoMapLookup(track_ref, track_dep_map, ele_track_iso, ele_track_pt, ele_track_phi, ele_track_eta);
 
-  for(std::vector<reco::RecoEcalCandidateRef>::const_iterator it = hcal_ref.begin(); it != hcal_ref.end(); ++it){
-    reco::RecoEcalCandidateIsolationMap::const_iterator hcal_mapi = hcal_dep_map->find(*it);
-    float vali = hcal_mapi->val;
-    float energy = (*it)->superCluster()->energy();
-    float etaSC = (*it)->eta();
-    energy *= sin(2.0 * atan(exp(-etaSC)));
-    ele_hcal_iso->push_back(vali/energy);
-  }
+  GetSubset(ele_ecal_iso, ele_ecal_iso_temp, ele_ecal_pt, ele_track_pt);
+  GetSubset(ele_hcal_iso, ele_hcal_iso_temp, ele_hcal_pt, ele_track_pt);
 
-  for(std::vector<reco::RecoEcalCandidateRef>::const_iterator it = track_ref.begin(); it != track_ref.end(); ++it){
-    reco::RecoEcalCandidateIsolationMap::const_iterator track_mapi = track_dep_map->find(*it);
-    float vali = track_mapi->val;
-    float energy = (*it)->superCluster()->energy();
-    float etaSC = (*it)->eta();
-    energy *= sin(2.0 * atan(exp(-etaSC)));
-    ele_track_iso->push_back(vali/energy);
-  }
-  
-  if(ele_ecal_iso->size()<ele_pt->size()) ele_ecal_iso->resize(ele_pt->size(), -1.0);
-  if(ele_hcal_iso->size()<ele_pt->size()) ele_hcal_iso->resize(ele_pt->size(), -1.0);
-  if(ele_track_iso->size()<ele_pt->size()) ele_track_iso->resize(ele_pt->size(), -1.0);
-  
-  iEvent.put(ele_pt, "elept");
-  iEvent.put(ele_phi, "elephi");
-  iEvent.put(ele_eta, "eleeta");
+  iEvent.put(ele_track_pt, "elept");
+  iEvent.put(ele_track_phi, "elephi");
+  iEvent.put(ele_track_eta, "eleeta");
   iEvent.put(ele_ecal_iso, "eleecaliso");
   iEvent.put(ele_hcal_iso, "elehcaliso");
   iEvent.put(ele_track_iso, "eletrackiso");
+}
+
+void GetSubset(std::auto_ptr<std::vector<float> >& iso,
+	       std::auto_ptr<std::vector<float> >& temp_iso,
+	       std::auto_ptr<std::vector<float> >& test_pt,
+	       std::auto_ptr<std::vector<float> >& ref_pt){
+  iso->resize(ref_pt->size());
+  for(unsigned refi = 0; refi<ref_pt->size(); ++refi){
+    bool found(false);
+    for(unsigned testi = 0; testi<test_pt->size() && !found; ++testi){
+      if(ref_pt->at(refi)==test_pt->at(testi)){
+	iso->at(refi) = temp_iso->at(testi);
+	found=true;
+      }
+    }
+    if(!found){
+      cms::Exception ex("MatchingFailure");
+      ex.append("Could not match the tracker pt to any calo pt.");
+      ex.addContext("Calling GetSubset");
+      ex.addAdditionalInfo("IsoElectronProducer will now give up.");
+      throw ex;
+    }
+  }
+}
+
+void IsoMapLookup(const std::vector<reco::RecoEcalCandidateRef>& ref,
+		  const edm::Handle<reco::RecoEcalCandidateIsolationMap>& map,
+		  std::auto_ptr<std::vector<float> >& iso,
+		  std::auto_ptr<std::vector<float> >& pt,
+		  std::auto_ptr<std::vector<float> >& phi,
+		  std::auto_ptr<std::vector<float> >& eta){
+  if(iso.get()) iso->clear();
+  if(pt.get()) pt->clear();
+  if(phi.get()) phi->clear();
+  if(eta.get()) eta->clear();
+  
+  for(const auto& ele: ref){
+    const float vali = map->find(ele)->val;
+    const float etaSC = ele->eta();
+    float energy = ele->superCluster()->energy();
+    energy *= sin(2.0*atan(exp(-etaSC)));
+      
+    if (iso.get()) iso->push_back(vali/energy);
+    if (pt.get()) pt->push_back(ele->pt());
+    if (phi.get()) phi->push_back(ele->phi());
+    if (eta.get()) eta->push_back(ele->eta());
+  }
 }
 
 //define this as a plug-in

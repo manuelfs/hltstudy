@@ -1,5 +1,9 @@
 // babymaker: Makes flat ntuples with HT, MET, MC, jets, and leptons
 
+#include <string>
+#include <memory>
+#include <vector>
+
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDProducer.h"
 #include "FWCore/Framework/interface/EDConsumerBase.h"
@@ -42,13 +46,21 @@ babymaker::babymaker(const edm::ParameterSet& iConfig) {
   produces<float> ("genmetcalo").setBranchAlias("gen_metcalo");
   produces<float> ("genmetcalononprompt").setBranchAlias("gen_metcalononprompt");
 
+  produces<std::vector<float> > ("elept").setBranchAlias("ele_pt");
+  produces<std::vector<float> > ("eleeta").setBranchAlias("ele_eta");
+  produces<std::vector<float> > ("elephi").setBranchAlias("ele_phi");
+
   produces<std::vector<float> > ("elspt").setBranchAlias("els_pt");
   produces<std::vector<float> > ("elseta").setBranchAlias("els_eta");
   produces<std::vector<float> > ("elsphi").setBranchAlias("els_phi");
+  produces<std::vector<float> > ("elsecaliso").setBranchAlias("els_ecal_iso");
+  produces<std::vector<float> > ("elshcaliso").setBranchAlias("els_hcal_iso");
+  produces<std::vector<float> > ("elstrackiso").setBranchAlias("els_track_iso");
     
   produces<std::vector<float> > ("muspt").setBranchAlias("mus_pt");
   produces<std::vector<float> > ("museta").setBranchAlias("mus_eta");
   produces<std::vector<float> > ("musphi").setBranchAlias("mus_phi");
+  produces<std::vector<float> > ("musiso").setBranchAlias("mus_iso");
     
   produces<std::vector<float> > ("pfjetspt").setBranchAlias("pfjets_pt");
   produces<std::vector<float> > ("pfjetseta").setBranchAlias("pfjets_eta");
@@ -105,8 +117,18 @@ babymaker::babymaker(const edm::ParameterSet& iConfig) {
   produces<unsigned int> ("ngenlep").setBranchAlias("ngenlep");
 
   hltPfJetsInputTag = iConfig.getParameter<edm::InputTag>("hltPfJetsInputTag_");
-  hltElectronInputTag = iConfig.getParameter<edm::InputTag>("hltElectronInputTag_");
-  hltMuonInputTag = iConfig.getParameter<edm::InputTag>("hltMuonInputTag_");
+  hltElectronInputString = iConfig.getParameter<std::string>("hltElectronInputString_");
+  hltElectronPtInputTag = edm::InputTag(hltElectronInputString, "elept");
+  hltElectronPhiInputTag = edm::InputTag(hltElectronInputString, "elephi");
+  hltElectronEtaInputTag = edm::InputTag(hltElectronInputString, "eleeta");
+  hltElectronEcalIsoInputTag = edm::InputTag(hltElectronInputString, "eleecaliso");
+  hltElectronHcalIsoInputTag = edm::InputTag(hltElectronInputString, "elehcaliso");
+  hltElectronTrackIsoInputTag = edm::InputTag(hltElectronInputString, "eletrackiso");
+  hltMuonInputString = iConfig.getParameter<std::string>("hltMuonInputString_");
+  hltMuonPtInputTag = edm::InputTag(hltMuonInputString, "mupt");
+  hltMuonPhiInputTag = edm::InputTag(hltMuonInputString, "muphi");
+  hltMuonEtaInputTag = edm::InputTag(hltMuonInputString, "mueta");
+  hltMuonIsoInputTag = edm::InputTag(hltMuonInputString, "muiso");
   hltPfMetInputTag = iConfig.getParameter<edm::InputTag>("hltPfMetInputTag_");
   hltPfHTInputTag = iConfig.getParameter<edm::InputTag>("hltPfHTInputTag_");
   hltGenJetsInputTag = iConfig.getParameter<edm::InputTag>("hltGenJetsInputTag_");
@@ -138,10 +160,18 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   auto els_pt  = make_auto(new std::vector<float>);
   auto els_eta = make_auto(new std::vector<float>);
   auto els_phi = make_auto(new std::vector<float>);
+  auto els_ecal_iso = make_auto(new std::vector<float>);
+  auto els_hcal_iso = make_auto(new std::vector<float>);
+  auto els_track_iso = make_auto(new std::vector<float>);
+
+  auto ele_pt = make_auto(new std::vector<float>);
+  auto ele_phi = make_auto(new std::vector<float>);
+  auto ele_eta = make_auto(new std::vector<float>);
   
   auto mus_pt  = make_auto(new std::vector<float>);
   auto mus_eta = make_auto(new std::vector<float>);
   auto mus_phi = make_auto(new std::vector<float>);
+  auto mus_iso = make_auto(new std::vector<float>);
     
   auto pfjets_pt  = make_auto(new std::vector<float>);
   auto pfjets_eta = make_auto(new std::vector<float>);
@@ -314,7 +344,8 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
         
     if( TMath::Abs(id) != 11 && TMath::Abs(id) != 13 ) continue; 
-    if( TMath::Abs(mom_id) != 24 && TMath::Abs(gmom_id) != 24 && TMath::Abs(ggmom_id) != 24 ) continue;
+    if( TMath::Abs(mom_id) != 24 && TMath::Abs(gmom_id) != 24 && TMath::Abs(ggmom_id) != 24 
+	&& genp->status() != 3 && genp->status() != 23 ) continue;
         
     if( TMath::Abs(id) == 11 ) {
       genels_pt  ->push_back(genp->p4().pt());
@@ -333,27 +364,41 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
       genmus_ggmom_id->push_back(ggmom_id);
     }
   }
-    
 
-  edm::Handle<edm::View<reco::Electron> > els_h;
-  if(hltElectronInputTag.label() !="unused") {
-    iEvent.getByLabel(hltElectronInputTag, els_h);
-    for(auto els_it = els_h->begin(); els_it != els_h->end(); ++els_it){
-      if(abs(els_it->pdgId()) != 11) continue;
-      els_pt  ->push_back(els_it->pt());
-      els_eta ->push_back(els_it->eta());
-      els_phi ->push_back(els_it->phi());
-    } 
+  if(hltElectronInputString != "unused"){
+    edm::Handle<std::vector<float> > els_pt_h;
+    edm::Handle<std::vector<float> > els_phi_h;
+    edm::Handle<std::vector<float> > els_eta_h;
+    edm::Handle<std::vector<float> > els_ecal_iso_h;
+    edm::Handle<std::vector<float> > els_hcal_iso_h;
+    edm::Handle<std::vector<float> > els_track_iso_h;
+    iEvent.getByLabel(hltElectronPtInputTag, els_pt_h);
+    iEvent.getByLabel(hltElectronPhiInputTag, els_phi_h);
+    iEvent.getByLabel(hltElectronEtaInputTag, els_eta_h);
+    iEvent.getByLabel(hltElectronEcalIsoInputTag, els_ecal_iso_h);
+    iEvent.getByLabel(hltElectronHcalIsoInputTag, els_hcal_iso_h);
+    iEvent.getByLabel(hltElectronTrackIsoInputTag, els_track_iso_h);
+    for(const auto& pt: *els_pt_h) els_pt->push_back(pt);
+    for(const auto& phi: *els_phi_h) els_phi->push_back(phi);
+    for(const auto& eta: *els_eta_h) els_eta->push_back(eta);
+    for(const auto& iso: *els_ecal_iso_h) els_ecal_iso->push_back(iso);
+    for(const auto& iso: *els_hcal_iso_h) els_hcal_iso->push_back(iso);
+    for(const auto& iso: *els_track_iso_h) els_track_iso->push_back(iso);
   }
 
-  edm::Handle<edm::View<reco::Muon> > mus_h;
-  if(hltMuonInputTag.label() !="unused") {
-    iEvent.getByLabel(hltMuonInputTag, mus_h);
-    for(auto mus_it = mus_h->begin(); mus_it != mus_h->end(); ++mus_it){
-      mus_pt  ->push_back(mus_it->pt());
-      mus_eta ->push_back(mus_it->eta());
-      mus_phi ->push_back(mus_it->phi());
-    } 
+  if(hltMuonInputString !="unused") {
+    edm::Handle<std::vector<float> > mus_pt_h;
+    edm::Handle<std::vector<float> > mus_phi_h;
+    edm::Handle<std::vector<float> > mus_eta_h;
+    edm::Handle<std::vector<float> > mus_iso_h;
+    iEvent.getByLabel(hltMuonPtInputTag, mus_pt_h);
+    iEvent.getByLabel(hltMuonPhiInputTag, mus_phi_h);
+    iEvent.getByLabel(hltMuonEtaInputTag, mus_eta_h);
+    iEvent.getByLabel(hltMuonIsoInputTag, mus_iso_h);
+    for(const auto& pt: *mus_pt_h) mus_pt->push_back(pt);
+    for(const auto& phi: *mus_phi_h) mus_phi->push_back(phi);
+    for(const auto& eta: *mus_eta_h) mus_eta->push_back(eta);
+    for(const auto& iso: *mus_iso_h) mus_iso->push_back(iso);
   }
 
   *gen_ht = 0;
@@ -431,10 +476,18 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   iEvent.put(els_pt,   "elspt" );
   iEvent.put(els_eta,  "elseta" );
   iEvent.put(els_phi,  "elsphi" );
+  iEvent.put(els_ecal_iso,  "elsecaliso" );
+  iEvent.put(els_hcal_iso,  "elshcaliso" );
+  iEvent.put(els_track_iso,  "elstrackiso" );
+
+  iEvent.put(ele_pt,   "elept" );
+  iEvent.put(ele_eta,  "eleeta" );
+  iEvent.put(ele_phi,  "elephi" );
     
   iEvent.put(mus_pt,   "muspt" );
   iEvent.put(mus_eta,  "museta" );
   iEvent.put(mus_phi,  "musphi" );
+  iEvent.put(mus_iso,  "musiso" );
 
   iEvent.put(pfjets_pt,   "pfjetspt" );
   iEvent.put(pfjets_eta,  "pfjetseta" );

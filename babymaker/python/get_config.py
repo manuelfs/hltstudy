@@ -6,13 +6,15 @@ import os
 
 def WriteConfig(file, reco):
     com = '#'
+    add = ''
     if reco:
         com = ''
+        add = 'reco'
 
     file.write("process.load('hltstudy.babymaker.setup_cff')\n")
     file.write("process.load('hltstudy.babymaker.IsoMuonProducer_cfi')\n")
     file.write("process.load('hltstudy.babymaker.IsoElectronProducer_cfi')\n")
-    file.write("process.load('hltstudy.babymaker.babymakerREPLACE_cfi')\n")
+    file.write("process.load('hltstudy.babymaker.babymakerREPLACE"+add+"_cfi')\n")
     file.write("\n")
     file.write("# import of standard configurations\n")
     file.write(com+"process.load('Configuration.StandardSequences.Services_cff')\n")
@@ -84,8 +86,6 @@ def WriteOutput(file, reco):
     file.write("\n")
     file.write("process.out.outputCommands = cms.untracked.vstring( 'drop *' ) ##\n")
     file.write("process.out.outputCommands.extend(cms.untracked.vstring('keep *_*babymaker*_*_*')) ##\n")
-    file.write("process.out.outputCommands.extend(cms.untracked.vstring('keep *_*IsoMuonProducer*_*_*')) ##\n")
-    file.write("process.out.outputCommands.extend(cms.untracked.vstring('keep *_*IsoElectronProducer*_*_*')) ##\n")
     file.write("\n")
     file.write("# Path and EndPath definitions for RECO\n")
     file.write(com+"process.raw2digi_step = cms.Path(process.RawToDigi)\n")
