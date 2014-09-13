@@ -115,10 +115,6 @@ babymaker::babymaker(const edm::ParameterSet& iConfig) {
   produces<float> ("pfmhteta").setBranchAlias("pf_mht_eta");
   produces<float> ("pfmhtphi").setBranchAlias("pf_mht_phi");
 
-  produces<float> ("calometpt").setBranchAlias("calo_met_pt");
-  produces<float> ("calometeta").setBranchAlias("calo_met_eta");
-  produces<float> ("calometphi").setBranchAlias("calo_met_phi");
-
   produces<float> ("calomhtpt").setBranchAlias("calo_mht_pt");
   produces<float> ("calomhteta").setBranchAlias("calo_mht_eta");
   produces<float> ("calomhtphi").setBranchAlias("calo_mht_phi");
@@ -140,7 +136,6 @@ babymaker::babymaker(const edm::ParameterSet& iConfig) {
   hltMuonIsoInputTag = edm::InputTag(hltMuonInputString, "muiso");
   hltPfMetInputTag = iConfig.getParameter<edm::InputTag>("hltPfMetInputTag_");
   hltPfHTInputTag = iConfig.getParameter<edm::InputTag>("hltPfHTInputTag_");
-  hltCaloMetInputTag = iConfig.getParameter<edm::InputTag>("hltCaloMetInputTag_");
   hltCaloHTInputTag = iConfig.getParameter<edm::InputTag>("hltCaloHTInputTag_");
   hltGenJetsInputTag = iConfig.getParameter<edm::InputTag>("hltGenJetsInputTag_");
 
@@ -248,10 +243,6 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   auto calo_mht_eta = make_auto(new float);
   auto calo_mht_phi = make_auto(new float);
 
-  auto calo_met_pt = make_auto(new float);
-  auto calo_met_eta = make_auto(new float);
-  auto calo_met_phi = make_auto(new float);
-
   auto pseudoMT2_hlt = make_auto(new float);
   auto pseudoMT2_snt = make_auto(new float);
   auto mt2_hlt       = make_auto(new float);
@@ -294,14 +285,6 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     *calo_mht_pt    = (calo_ht_h->front()).pt();
     *calo_mht_eta   = (calo_ht_h->front()).eta();
     *calo_mht_phi   = (calo_ht_h->front()).phi();
-  }
-
-  if(hltCaloMetInputTag.label() != "unused"){
-    edm::Handle<edm::View<reco::MET> > met_h;
-    iEvent.getByLabel(hltCaloMetInputTag, met_h);
-    *calo_met_pt   = (met_h->front()).pt();
-    *calo_met_eta  = (met_h->front()).eta();
-    *calo_met_phi  = (met_h->front()).phi();
   }
 
   edm::Handle<edm::View<reco::GenJet> > genjet_h;
@@ -589,9 +572,6 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   iEvent.put(calo_mht_pt, "calomhtpt");
   iEvent.put(calo_mht_eta, "calomhteta");
   iEvent.put(calo_mht_phi, "calomhtphi");
-  iEvent.put(calo_met_pt, "calometpt");
-  iEvent.put(calo_met_eta, "calometeta");
-  iEvent.put(calo_met_phi, "calometphi");
 
   iEvent.put(ngenlep,  "ngenlep" );
 }

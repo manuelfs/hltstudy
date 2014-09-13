@@ -7,7 +7,6 @@ babymaker = cms.EDProducer(
     hltPfJetsInputTag_      = cms.InputTag("unused"),
     hltPfMetInputTag_       = cms.InputTag("unused"),
     hltPfHTInputTag_        = cms.InputTag("unused"),
-    hltCaloMetInputTag_     = cms.InputTag("unused"),
     hltCaloHTInputTag_      = cms.InputTag("unused"),
     hltGenJetsInputTag_     = cms.InputTag("ak4GenJetsNoNu"),
     recoMuonInputTag_       = cms.InputTag("unused"),
