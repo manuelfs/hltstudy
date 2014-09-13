@@ -2,9 +2,9 @@ import FWCore.ParameterSet.Config as cms
 
 IsoElectronProducer = cms.EDProducer(
     "IsoElectronProducer",
-    ecalTag = cms.InputTag("hltEle27WP80EcalIsoFilter"),
-    hcalTag = cms.InputTag("hltEle27WP80HcalIsoFilter"),
-    trackTag = cms.InputTag("hltEle27WP80GsfTrackIsoFilter"),
+    ecalTag = cms.InputTag("hltEle15IsoVVVLEcalIsoFilter"),
+    hcalTag = cms.InputTag("hltEle15IsoVVVLHcalIsoFilter"),
+    trackTag = cms.InputTag("hltEle15IsoVVVLGsfTrackIsoFilter"),
     ecalMapTag = cms.InputTag("hltEgammaEcalPFClusterIso"),
     hcalMapTag = cms.InputTag("hltEgammaHcalPFClusterIso"),
     trackMapTag = cms.InputTag("hltEgammaEleGsfTrackIso")

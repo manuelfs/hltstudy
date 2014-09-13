@@ -39,6 +39,8 @@ class babymaker : public edm::EDProducer {
   edm::InputTag hltPfJetsInputTag;
   edm::InputTag hltPfMetInputTag;
   edm::InputTag hltPfHTInputTag;
+  edm::InputTag hltCaloMetInputTag;
+  edm::InputTag hltCaloHTInputTag;
   edm::InputTag hltGenJetsInputTag;
   
   edm::InputTag recoElectronInputTag;
