@@ -20,7 +20,7 @@ dsetnew = dsetnew.replace('/GEN-SIM-RAW','')
 dsetnew = dsetnew.replace('/','_')
 
 
-samples = ['el15', 'el20', 'mu15', 'mu20']
+samples = ['el15vvvl', 'el15noiso']
 for sam in samples:
     task = 'jobs/'+dsetnew+'_'+sam
     print('crab -status -c '+task+' >& tmp.log')

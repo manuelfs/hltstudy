@@ -20,12 +20,13 @@ dsetnew = dsetnew.replace('/GEN-SIM-RAW','')
 dsetnew = dsetnew.replace('/','_')
 
 
-samples = ['el15', 'el20', 'mu15', 'mu20']
+samples = ['el15vvvl', 'el15noiso']
 for sam in samples:
     task = 'jobs/'+dsetnew+'_'+sam
     os.system('rm -rf '+task)
     os.system('./makecfg.py -d '+dset+' -s '+sam)  
-    #print('crab -create -cfg cfg/'+dsetnew+'_'+sam+'.cfg\n')
+    print('crab -create -cfg cfg/'+dsetnew+'_'+sam+'.cfg\n')
+    #print('crab -submit -c '+task) 
     os.system('crab -create -cfg cfg/'+dsetnew+'_'+sam+'.cfg')
     os.system('crab -submit -c '+task) 
 

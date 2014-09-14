@@ -1,6 +1,10 @@
 #include "hlt_class.h"
 hlt_class hlt;
 namespace baby {
+	const float &calo_ht() { return hlt.calo_ht(); }
+	const float &calo_mht_eta() { return hlt.calo_mht_eta(); }
+	const float &calo_mht_phi() { return hlt.calo_mht_phi(); }
+	const float &calo_mht_pt() { return hlt.calo_mht_pt(); }
 	const float &gen_ht() { return hlt.gen_ht(); }
 	const float &gen_met() { return hlt.gen_met(); }
 	const float &gen_metcalo() { return hlt.gen_metcalo(); }
@@ -13,9 +17,19 @@ namespace baby {
 	const float &pf_mht_phi() { return hlt.pf_mht_phi(); }
 	const float &pf_mht_pt() { return hlt.pf_mht_pt(); }
 	const float &wl1ht200() { return hlt.wl1ht200(); }
+	const vector<float> &bjets_csv() { return hlt.bjets_csv(); }
+	const vector<float> &bjets_eta() { return hlt.bjets_eta(); }
+	const vector<float> &bjets_phi() { return hlt.bjets_phi(); }
+	const vector<float> &bjets_pt() { return hlt.bjets_pt(); }
+	const vector<float> &ele_eta() { return hlt.ele_eta(); }
+	const vector<float> &ele_phi() { return hlt.ele_phi(); }
+	const vector<float> &ele_pt() { return hlt.ele_pt(); }
+	const vector<float> &els_ecal_iso() { return hlt.els_ecal_iso(); }
 	const vector<float> &els_eta() { return hlt.els_eta(); }
+	const vector<float> &els_hcal_iso() { return hlt.els_hcal_iso(); }
 	const vector<float> &els_phi() { return hlt.els_phi(); }
 	const vector<float> &els_pt() { return hlt.els_pt(); }
+	const vector<float> &els_track_iso() { return hlt.els_track_iso(); }
 	const vector<float> &genels_eta() { return hlt.genels_eta(); }
 	const vector<float> &genels_phi() { return hlt.genels_phi(); }
 	const vector<float> &genels_pt() { return hlt.genels_pt(); }
@@ -26,10 +40,29 @@ namespace baby {
 	const vector<float> &genmus_phi() { return hlt.genmus_phi(); }
 	const vector<float> &genmus_pt() { return hlt.genmus_pt(); }
 	const vector<float> &mus_eta() { return hlt.mus_eta(); }
+	const vector<float> &mus_iso() { return hlt.mus_iso(); }
 	const vector<float> &mus_phi() { return hlt.mus_phi(); }
 	const vector<float> &mus_pt() { return hlt.mus_pt(); }
 	const vector<float> &pfjets_eta() { return hlt.pfjets_eta(); }
 	const vector<float> &pfjets_phi() { return hlt.pfjets_phi(); }
 	const vector<float> &pfjets_pt() { return hlt.pfjets_pt(); }
+	const vector<float> &reco_els_eta() { return hlt.reco_els_eta(); }
+	const vector<float> &reco_els_phi() { return hlt.reco_els_phi(); }
+	const vector<float> &reco_els_pt() { return hlt.reco_els_pt(); }
+	const vector<float> &reco_genjet_eta() { return hlt.reco_genjet_eta(); }
+	const vector<float> &reco_genjet_phi() { return hlt.reco_genjet_phi(); }
+	const vector<float> &reco_genjet_pt() { return hlt.reco_genjet_pt(); }
+	const vector<float> &reco_jet_eta() { return hlt.reco_jet_eta(); }
+	const vector<float> &reco_jet_phi() { return hlt.reco_jet_phi(); }
+	const vector<float> &reco_jet_pt() { return hlt.reco_jet_pt(); }
+	const vector<float> &reco_mus_eta() { return hlt.reco_mus_eta(); }
+	const vector<float> &reco_mus_phi() { return hlt.reco_mus_phi(); }
+	const vector<float> &reco_mus_pt() { return hlt.reco_mus_pt(); }
+	const vector<int> &genels_ggmom_id() { return hlt.genels_ggmom_id(); }
+	const vector<int> &genels_gmom_id() { return hlt.genels_gmom_id(); }
+	const vector<int> &genels_mom_id() { return hlt.genels_mom_id(); }
+	const vector<int> &genmus_ggmom_id() { return hlt.genmus_ggmom_id(); }
+	const vector<int> &genmus_gmom_id() { return hlt.genmus_gmom_id(); }
+	const vector<int> &genmus_mom_id() { return hlt.genmus_mom_id(); }
 	const unsigned int &ngenlep() { return hlt.ngenlep(); }
 }

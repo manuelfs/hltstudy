@@ -37,7 +37,7 @@ def makeCrabConfig():
     outFile.write('use_server               = ' + '0' + '\n')
     outFile.write('\n[CMSSW]\n')
     outFile.write('datasetpath              = ' + dataSet + '\n')
-    outFile.write('pset                     = ../python/run_' + sample + '.py \n')
+    outFile.write('pset                     = ../python/cfg_' + sample + '.py \n')
     outFile.write('total_number_of_events   = ' + str(numEvtsTotal) + '\n')
     outFile.write('events_per_job           = ' + str(numEvtsPerJob) + '\n')
     outFile.write('output_file              = ' + outNtupleName + '_' + sample +'.root\n')
@@ -60,7 +60,7 @@ def makeCrabConfig():
     outFile.write('\n')
     outFile.write('[GRID]\n')
     # outFile.write('maxtarballsize = 20\n')
-    outFile.write('data_location_override = T2_US\n')
+#    outFile.write('data_location_override = T2_US\n')
     
 	 
 #    outFile.write('##here are some default sites that we \n')

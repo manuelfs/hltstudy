@@ -25,10 +25,11 @@ using namespace std;
 using std::cout;
 using std::endl;
 
+typedef std::pair<int,double> int_double;
 vector<TString> dirlist(TString folder, TString inname="dir", TString tag="");
 float cross_section(TString file);
-void sortlists(int &nlist, vector<double> *pt, vector<double> *eta, vector<double> *phi,
-	       const vector<float> treept, const vector<float> treeeta, const vector<float> treephi);
+vector<int_double> sortlists(int &nlist, vector<double> *pt, vector<double> *eta, vector<double> *phi,
+			     const vector<float> treept, const vector<float> treeeta, const vector<float> treephi);
 double deltaphi(double phi1, double phi2);
 float dR(float eta1, float eta2, float phi1, float phi2);
 void ngenleptons(TString filename, vector<int> &nori_genels, vector<int> &nori_genmus, vector<int> genlep_thresh);
@@ -41,21 +42,21 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
 
   int totentries;
   vector<int> genlep_thresh, nori_genels, nori_genmus;
-  float onmet, onmet_phi, onht, weight, wl1ht200, genht, genmet, mindr_mu, mindr2_mu, mindr_genmu;
+  float onmet, onmet_phi, onht, caloht, weight, wl1ht200, genht, genmet;
   //vector<int_double> sorted; 
-  int nels, ngenels, nmus, ngenmus, njets, ngenjets;
+  int nels, ngenels, nmus, ngenmus, njets, nbjets, ngenjets;
   vector<double> elspt, elseta, elsphi, genelspt, genelseta, genelsphi;
   vector<double> muspt, museta, musphi, genmuspt, genmuseta, genmusphi;
+  vector<double> musreliso, musgenpt, elsreliso, elstrackiso, elsecaliso, elshcaliso, elsgenpt;
   vector<double> jetspt, jetseta, jetsphi, genjetspt, genjetseta, genjetsphi;
+  vector<double> bjetspt, bjetseta, bjetsphi, bjetscsv;
   const float luminosity = 19600;
   TChain chain("Events");
   TTree tree("tree", "tree");
-  tree.Branch("mindr_mu", &mindr_mu);
-  tree.Branch("mindr2_mu", &mindr2_mu);
-  tree.Branch("mindr_genmu", &mindr_genmu);
   tree.Branch("onmet", &onmet);
   tree.Branch("onmet_phi", &onmet_phi);
   tree.Branch("onht", &onht);
+  tree.Branch("caloht", &caloht);
   tree.Branch("weight", &weight);
   tree.Branch("wl1ht200", &wl1ht200);
   tree.Branch("genht", &genht);
@@ -63,18 +64,29 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
   tree.Branch("els_pt", &elspt);
   tree.Branch("els_eta", &elseta);
   tree.Branch("els_phi", &elsphi);
+  tree.Branch("els_reliso", &elsreliso);
+  tree.Branch("els_trackiso", &elstrackiso);
+  tree.Branch("els_ecaliso", &elsecaliso);
+  tree.Branch("els_hcaliso", &elshcaliso);
+  tree.Branch("els_genpt", &elsgenpt);
   tree.Branch("genels_pt", &genelspt);
   tree.Branch("genels_eta", &genelseta);
   tree.Branch("genels_phi", &genelsphi);
   tree.Branch("mus_pt", &muspt);
   tree.Branch("mus_eta", &museta);
   tree.Branch("mus_phi", &musphi);
+  tree.Branch("mus_reliso", &musreliso);
+  tree.Branch("mus_genpt", &musgenpt);
   tree.Branch("genmus_pt", &genmuspt);
   tree.Branch("genmus_eta", &genmuseta);
   tree.Branch("genmus_phi", &genmusphi);
   tree.Branch("jets_pt", &jetspt);
   tree.Branch("jets_eta", &jetseta);
   tree.Branch("jets_phi", &jetsphi);
+  tree.Branch("bjets_pt", &bjetspt);
+  tree.Branch("bjets_eta", &bjetseta);
+  tree.Branch("bjets_phi", &bjetsphi);
+  tree.Branch("bjets_csv", &bjetscsv);
   tree.Branch("genjets_pt", &genjetspt);
   tree.Branch("genjets_eta", &genjetseta);
   tree.Branch("genjets_phi", &genjetsphi);
@@ -83,6 +95,7 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
   tree.Branch("nmus", &nmus);
   tree.Branch("ngenmus", &ngenmus);
   tree.Branch("njets", &njets);
+  tree.Branch("nbjets", &nbjets);
   tree.Branch("ngenjets", &ngenjets);
 
   genlep_thresh.push_back(0); genlep_thresh.push_back(10); 
@@ -97,6 +110,7 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
   treeglobal.Branch("nori_genels", &nori_genels);
   treeglobal.Branch("genlep_thresh", &genlep_thresh);
 
+  vector<int_double> mus_sorted, els_sorted, bjets_sorted;
   TString filename, rootname, sampledir;
   vector<TString> dirs = dirlist(folder, "dir", tagFolders);
   for(unsigned idir(0); idir < dirs.size(); idir++){
@@ -124,44 +138,60 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
 	hlt.GetEntry(entry);
 	// Saving only events with at least one lepton
 	if(mus_pt().size()==0 && els_pt().size()==0) continue;
+
 	onht = pf_ht();
-	onmet = met_pt();
+	caloht = calo_ht();
+	//onmet = met_pt();
 	onmet_phi = met_phi();
 	genht = 0;
 	for(unsigned ijet(0); ijet < genjets_pt().size(); ijet++)
 	  if(genjets_pt().at(ijet)>40 && genjets_eta().at(ijet)<3) genht += genjets_pt().at(ijet);
-	//genht = gen_ht();
-	//genmet = gen_met();
+	genmet = gen_met();
+
 	// Sort object lists in terms of pt, and save them
-	sortlists(nmus, &muspt, &museta, &musphi, mus_pt(), mus_eta(), mus_phi());
-	mindr_mu = 999;
-	mindr2_mu = 999;
-	if(museta.size() > 0){
-	  float mueta(museta[0]), muphi(musphi[0]);
-	  for(unsigned ijet(0); ijet < pfjets_pt().size(); ijet++){
-	    if(pfjets_pt()[ijet] < 50) continue;
-	    float dRjet(dR(mueta, pfjets_eta()[ijet], muphi, pfjets_phi()[ijet]));
-	    if(dRjet < mindr2_mu) {
-	      if(dRjet < mindr_mu){
-		mindr2_mu = mindr_mu;
-		mindr_mu = dRjet;
-	      } else mindr2_mu = dRjet;
+	mus_sorted = sortlists(nmus, &muspt, &museta, &musphi, mus_pt(), mus_eta(), mus_phi());
+	musreliso.resize(0); musgenpt.resize(0);
+	for(int ilep(0); ilep < nmus; ilep++){
+	  musreliso.push_back(mus_iso()[mus_sorted[ilep].first]);
+	  float mindr(999.);
+	  int imin(-1);
+	  for(unsigned igen(0); igen < genmus_pt().size(); igen++){
+	    if(abs(genmus_mom_id()[igen]) == 24 || abs(genmus_gmom_id()[igen]) == 24 || 
+	       abs(genmus_ggmom_id()[igen]) == 24){
+	      float dr = dR(museta[ilep], genmus_eta()[igen], musphi[ilep], genmus_phi()[igen]);
+	      float mingenpt = genmus_pt()[igen];
+	      if(dr < mindr && abs((mingenpt-muspt[ilep])/muspt[ilep])<0.5) {mindr = dr; imin = igen;}
 	    }
-	  }
+	  } // Loop over genmus
+	  if(imin>=0) musgenpt.push_back(genmus_pt()[imin]);
+	  else musgenpt.push_back(-99);
 	}
 	sortlists(ngenmus, &genmuspt, &genmuseta, &genmusphi, genmus_pt(), genmus_eta(), genmus_phi());
-	mindr_genmu = 999;
-	if(genmuseta.size() > 0){
-	  float genmueta(genmuseta[0]), genmuphi(genmusphi[0]);
-	  for(unsigned ijet(0); ijet < genjets_pt().size(); ijet++){
-	    if(genjets_pt()[ijet] < 50) continue;
-	    float dRjet(dR(genmueta, genjets_eta()[ijet], genmuphi, genjets_phi()[ijet]));
-	    if(dRjet < mindr_genmu) mindr_genmu = dRjet;
-	  }
+	els_sorted = sortlists(nels, &elspt, &elseta, &elsphi, els_pt(), els_eta(), els_phi());
+	elsreliso.resize(0); elstrackiso.resize(0); elsecaliso.resize(0); elshcaliso.resize(0);
+	elsgenpt.resize(0);
+	for(int ilep(0); ilep < nels; ilep++){
+	  elstrackiso.push_back(els_track_iso()[els_sorted[ilep].first]);
+	  elsecaliso.push_back(els_ecal_iso()[els_sorted[ilep].first]);
+	  elshcaliso.push_back(els_ecal_iso()[els_sorted[ilep].first]);
+	  elsreliso.push_back(elstrackiso[ilep]+elsecaliso[ilep]+elshcaliso[ilep]);
+	  float mindr(999.);
+	  int imin(-1);
+	  for(unsigned igen(0); igen < genels_pt().size(); igen++){
+	    if(abs(genels_mom_id()[igen]) == 24 || abs(genels_gmom_id()[igen]) == 24 || 
+	       abs(genels_ggmom_id()[igen]) == 24){
+	      float dr = dR(elseta[ilep], genels_eta()[igen], elsphi[ilep], genels_phi()[igen]);
+	      float mingenpt = genels_pt()[igen];
+	      if(dr < mindr && abs((mingenpt-elspt[ilep])/elspt[ilep])<0.5) {mindr = dr; imin = igen;}
+	    }
+	  } // Loop over genels
+	  if(imin>=0) elsgenpt.push_back(genels_pt()[imin]);
+	  else elsgenpt.push_back(-99);
 	}
-	sortlists(nels, &elspt, &elseta, &elsphi, els_pt(), els_eta(), els_phi());
+
 	sortlists(ngenels, &genelspt, &genelseta, &genelsphi, genels_pt(), genels_eta(), genels_phi());
 	sortlists(njets, &jetspt, &jetseta, &jetsphi, pfjets_pt(), pfjets_eta(), pfjets_phi());
+	bjets_sorted = sortlists(nbjets, &bjetspt, &bjetseta, &bjetsphi, bjets_pt(), bjets_eta(), bjets_phi());
 	sortlists(ngenjets, &genjetspt, &genjetseta, &genjetsphi, genjets_pt(), genjets_eta(), genjets_phi());
 	wl1ht200 = (0.5*TMath::Erf((1.35121e-02)*(genht-(3.02695e+02)))+0.5);
 	weight = wl1ht200*xsection*luminosity / static_cast<double>(totentries);
@@ -209,13 +239,12 @@ void ngenleptons(TString filename, vector<int> &nori_genels, vector<int> &nori_g
 }
 
 // Definitions to sort vectors
-typedef std::pair<int,double> int_double;
 bool id_big2small(const int_double& left, const int_double& right){ 
   return left.second > right.second; 
 }  
 
-void sortlists(int &nlist, vector<double> *pt, vector<double> *eta, vector<double> *phi,
-	       const vector<float> treept, const vector<float> treeeta, const vector<float> treephi){
+vector<int_double> sortlists(int &nlist, vector<double> *pt, vector<double> *eta, vector<double> *phi,
+			     const vector<float> treept, const vector<float> treeeta, const vector<float> treephi){
 
   nlist = static_cast<int>(treept.size());
   vector<int_double> sorted; 
@@ -228,6 +257,7 @@ void sortlists(int &nlist, vector<double> *pt, vector<double> *eta, vector<doubl
     eta->push_back(treeeta[sorted[ind].first]);
     phi->push_back(treephi[sorted[ind].first]);
   }
+  return sorted;
 }
 
 // Returns list of directorites or files in folder
