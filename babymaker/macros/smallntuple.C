@@ -40,8 +40,9 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
   TString ntupledir = "ntuples/"+subfolder+"/";
   gSystem->mkdir(ntupledir);
 
-  int totentries;
-  vector<int> genlep_thresh, nori_genels, nori_genmus;
+  int totentries, nori_genmu0, nori_genel0;
+  vector<int> genlep_thresh, v_nori_genels, v_nori_genmus;
+  vector<int> *nori_genels = &v_nori_genels, *nori_genmus = &v_nori_genmus;
   float onmet, onmet_phi, onht, caloht, weight, wl1ht200, genht, genmet;
   //vector<int_double> sorted; 
   int nels, ngenels, nmus, ngenmus, njets, nbjets, ngenjets;
@@ -102,12 +103,14 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
   genlep_thresh.push_back(15); genlep_thresh.push_back(17); 
   genlep_thresh.push_back(20); genlep_thresh.push_back(25); 
   for(unsigned ind(0); ind<genlep_thresh.size(); ind++){
-    nori_genmus.push_back(0); nori_genels.push_back(0);
+    v_nori_genmus.push_back(0); v_nori_genels.push_back(0);
   }
   TTree treeglobal("treeglobal", "treeglobal");
   treeglobal.Branch("noriginal", &totentries);
   treeglobal.Branch("nori_genmus", &nori_genmus);
   treeglobal.Branch("nori_genels", &nori_genels);
+  treeglobal.Branch("nori_genmu0", &nori_genmu0);
+  treeglobal.Branch("nori_genel0", &nori_genel0);
   treeglobal.Branch("genlep_thresh", &genlep_thresh);
 
   vector<int_double> mus_sorted, els_sorted, bjets_sorted;
@@ -139,9 +142,9 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
 	// Saving only events with at least one lepton
 	if(mus_pt().size()==0 && els_pt().size()==0) continue;
 
-	onht = pf_ht();
 	caloht = calo_ht();
-	//onmet = met_pt();
+	onht = pf_ht();
+	onmet = met_pt();
 	onmet_phi = met_phi();
 	genht = 0;
 	for(unsigned ijet(0); ijet < genjets_pt().size(); ijet++)
@@ -173,7 +176,7 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
 	for(int ilep(0); ilep < nels; ilep++){
 	  elstrackiso.push_back(els_track_iso()[els_sorted[ilep].first]);
 	  elsecaliso.push_back(els_ecal_iso()[els_sorted[ilep].first]);
-	  elshcaliso.push_back(els_ecal_iso()[els_sorted[ilep].first]);
+	  elshcaliso.push_back(els_hcal_iso()[els_sorted[ilep].first]);
 	  elsreliso.push_back(elstrackiso[ilep]+elsecaliso[ilep]+elshcaliso[ilep]);
 	  float mindr(999.);
 	  int imin(-1);
@@ -192,6 +195,9 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
 	sortlists(ngenels, &genelspt, &genelseta, &genelsphi, genels_pt(), genels_eta(), genels_phi());
 	sortlists(njets, &jetspt, &jetseta, &jetsphi, pfjets_pt(), pfjets_eta(), pfjets_phi());
 	bjets_sorted = sortlists(nbjets, &bjetspt, &bjetseta, &bjetsphi, bjets_pt(), bjets_eta(), bjets_phi());
+	bjetscsv.resize(0);
+	for(int ilep(0); ilep < nbjets; ilep++)
+	  bjetscsv.push_back(bjets_csv()[bjets_sorted[ilep].first]);
 	sortlists(ngenjets, &genjetspt, &genjetseta, &genjetsphi, genjets_pt(), genjets_eta(), genjets_phi());
 	wl1ht200 = (0.5*TMath::Erf((1.35121e-02)*(genht-(3.02695e+02)))+0.5);
 	weight = wl1ht200*xsection*luminosity / static_cast<double>(totentries);
@@ -200,7 +206,8 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
       chain.Reset(); 
     } // Loop over files in the sample folder
     tree.Write();
-    ngenleptons(filename, nori_genels, nori_genmus, genlep_thresh);
+    ngenleptons(filename, v_nori_genels, v_nori_genmus, genlep_thresh);
+    nori_genel0 = v_nori_genels[0]; nori_genmu0 = v_nori_genmus[0]; 
     treeglobal.Fill();
     treeglobal.Write();
     rootfile.Close();
