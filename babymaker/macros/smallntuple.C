@@ -43,7 +43,7 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
   int totentries, nori_genmu0, nori_genel0;
   vector<int> genlep_thresh, v_nori_genels, v_nori_genmus;
   vector<int> *nori_genels = &v_nori_genels, *nori_genmus = &v_nori_genmus;
-  float onmet, onmet_phi, onht, caloht, weight, wl1ht200, genht, genmet;
+  float onmet, onmet_phi, onht, caloht, weight, wl1ht200, genht, genmet, wlumi;
   //vector<int_double> sorted; 
   int nels, ngenels, nmus, ngenmus, njets, nbjets, ngenjets;
   vector<double> elspt, elseta, elsphi, genelspt, genelseta, genelsphi;
@@ -60,6 +60,7 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
   tree.Branch("caloht", &caloht);
   tree.Branch("weight", &weight);
   tree.Branch("wl1ht200", &wl1ht200);
+  tree.Branch("wlumi", &wlumi);
   tree.Branch("genht", &genht);
   tree.Branch("genmet", &genmet);
   tree.Branch("els_pt", &elspt);
@@ -153,7 +154,7 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
 
 	// Sort object lists in terms of pt, and save them
 	mus_sorted = sortlists(nmus, &muspt, &museta, &musphi, mus_pt(), mus_eta(), mus_phi());
-	musreliso.resize(0); musgenpt.resize(0);
+	musreliso.resize(0); musgenpt.resize(0); 
 	for(int ilep(0); ilep < nmus; ilep++){
 	  musreliso.push_back(mus_iso()[mus_sorted[ilep].first]);
 	  float mindr(999.);
@@ -172,7 +173,7 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
 	sortlists(ngenmus, &genmuspt, &genmuseta, &genmusphi, genmus_pt(), genmus_eta(), genmus_phi());
 	els_sorted = sortlists(nels, &elspt, &elseta, &elsphi, els_pt(), els_eta(), els_phi());
 	elsreliso.resize(0); elstrackiso.resize(0); elsecaliso.resize(0); elshcaliso.resize(0);
-	elsgenpt.resize(0);
+	elsgenpt.resize(0); 
 	for(int ilep(0); ilep < nels; ilep++){
 	  elstrackiso.push_back(els_track_iso()[els_sorted[ilep].first]);
 	  elsecaliso.push_back(els_ecal_iso()[els_sorted[ilep].first]);
@@ -200,7 +201,8 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
 	  bjetscsv.push_back(bjets_csv()[bjets_sorted[ilep].first]);
 	sortlists(ngenjets, &genjetspt, &genjetseta, &genjetsphi, genjets_pt(), genjets_eta(), genjets_phi());
 	wl1ht200 = (0.5*TMath::Erf((1.35121e-02)*(genht-(3.02695e+02)))+0.5);
-	weight = wl1ht200*xsection*luminosity / static_cast<double>(totentries);
+	wlumi = xsection*luminosity / static_cast<double>(totentries);
+	weight = wl1ht200*wlumi;
 	tree.Fill();
       }
       chain.Reset(); 
@@ -305,6 +307,9 @@ float cross_section(TString file){
   if(file.Contains("WJetsToLNu_HT-200to400"))  xsec = 471.6;
   if(file.Contains("WJetsToLNu_HT-400to600"))  xsec = 55.61;
   if(file.Contains("WJetsToLNu_HT-600toInf"))  xsec = 18.81;
+
+  if(file.Contains("WToENu"))   xsec = 16000.0;
+  if(file.Contains("WToMuNu"))  xsec = 16100.0;
 
   if(file.Contains("QCD_Pt-5to10"))	 xsec = 80710000000;
   if(file.Contains("QCD_Pt-10to15"))	 xsec = 7528000000;
