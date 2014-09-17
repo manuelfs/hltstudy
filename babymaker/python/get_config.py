@@ -116,12 +116,18 @@ def WriteSchedule(file, path_list, path_opt, reco, timing):
     path_lines = []
     names = []
 
+    add_first_path=False
+
     for path in path_list:
         path_name = GetPathName(path)
         path_def = GetPathDef(path)
 
-        maybe_electron = path_name.find("Ele") != -1
-        maybe_muon = path_name.find("Mu") != -1
+        if timing and path_name == 'HLTriggerFirstPath':
+            add_first_path = True
+            continue
+
+        maybe_electron = path_name.find('Ele') != -1
+        maybe_muon = path_name.find('Mu') != -1
 
         baby_maker = ''
         iso_producer = ''
@@ -143,10 +149,14 @@ def WriteSchedule(file, path_list, path_opt, reco, timing):
         seq_lines.extend([seq_line])
         path_lines.extend([path_line])
 
+    if timing:
+        file.write('process.SeqHLTriggerFirstPath = cms.Sequence( process.hltGetRaw + process.hltGetConditions + process.hltBoolFalse )\n')
     for seq in seq_lines:
         file.write(seq)
     file.write("\n")
 
+    if timing:
+        file.write('process.HLTriggerFirstPath = cms.Path( process.SeqHLTriggerFirstPath )\n')
     for path in path_lines:
         file.write(path)
     file.write("\n")
@@ -166,12 +176,12 @@ def WriteSchedule(file, path_list, path_opt, reco, timing):
         else:
             to_schedule = [int(i) for i in to_schedule]
 
-    if timing:
-        WriteTiming(file)
-
     lep_type = 'mu'
     if len(names) > 0:
-        file.write('process.schedule = cms.Schedule( ')
+        if not timing:
+            file.write('process.schedule = cms.Schedule( ')
+        else:
+            file.write('process.schedule = cms.Schedule( process.HLTriggerFirstPath , ')
         already_added = set()
         for path in to_schedule:
             if 0 < path <= len(names):
@@ -187,80 +197,9 @@ def WriteSchedule(file, path_list, path_opt, reco, timing):
         if not timing:
             file.write('process.outpath ) ##\n\n')
         else:
-            file.write('process.DQMFileSaverOutput ) ##\n\n')
+            file.write('process.TimingOutput ) ##\n\n')
 
     return lep_type
-
-def WriteTiming(file):
-    file.write("# instrument the menu with the FastTimerService")
-    file.write("process.load( 'HLTrigger.Timer.FastTimerService_cfi' )")
-    file.write("")
-    file.write("# this is currently ignored in 7.x, and alway uses the real tim clock")
-    file.write("process.FastTimerService.useRealTimeClock         = True")
-    file.write("")
-    file.write("# enable specific features")
-    file.write("process.FastTimerService.enableTimingPaths        = True")
-    file.write("process.FastTimerService.enableTimingModules      = True")
-    file.write("process.FastTimerService.enableTimingExclusive    = True")
-    file.write("")
-    file.write("# print a text summary at the end of the job")
-    file.write("process.FastTimerService.enableTimingSummary      = True")
-    file.write("")
-    file.write("# skip the first path (useful for HLT timing studies to disregard the time spent loading event and conditions data)")
-    file.write("process.FastTimerService.skipFirstPath            = False")
-    file.write("")
-    file.write("# enable per-event DQM plots")
-    file.write("process.FastTimerService.enableDQM                = True")
-    file.write("")
-    file.write("# enable per-path DQM plots")
-    file.write("process.FastTimerService.enableDQMbyPathActive    = True")
-    file.write("process.FastTimerService.enableDQMbyPathTotal     = True")
-    file.write("process.FastTimerService.enableDQMbyPathOverhead  = True")
-    file.write("process.FastTimerService.enableDQMbyPathDetails   = True")
-    file.write("process.FastTimerService.enableDQMbyPathCounters  = True")
-    file.write("process.FastTimerService.enableDQMbyPathExclusive = True")
-    file.write("")
-    file.write("# enable per-module DQM plots")
-    file.write("process.FastTimerService.enableDQMbyModule        = True")
-    file.write("process.FastTimerService.enableDQMbyModuleType    = True")
-    file.write("")
-    file.write("# enable per-event DQM sumary plots")
-    file.write("process.FastTimerService.enableDQMSummary         = True")
-    file.write("")
-    file.write("# enable per-event DQM plots by lumisection")
-    file.write("process.FastTimerService.enableDQMbyLumiSection   = True")
-    file.write("process.FastTimerService.dqmLumiSectionsRange     = 2500    # lumisections (23.31 s)")
-    file.write("")
-    file.write("# set the time resolution of the DQM plots")
-    file.write("process.FastTimerService.dqmTimeRange             = 1000.   # ms")
-    file.write("process.FastTimerService.dqmTimeResolution        =    5.   # ms")
-    file.write("process.FastTimerService.dqmPathTimeRange         =  100.   # ms")
-    file.write("process.FastTimerService.dqmPathTimeResolution    =    0.5  # ms")
-    file.write("process.FastTimerService.dqmModuleTimeRange       =   40.   # ms")
-    file.write("process.FastTimerService.dqmModuleTimeResolution  =    0.2  # ms")
-    file.write("")
-    file.write("# set the base DQM folder for the plots")
-    file.write("process.FastTimerService.dqmPath                  = 'HLT/TimerService'")
-    file.write("process.FastTimerService.enableDQMbyProcesses     = True")
-    file.write("")
-    file.write("# save the DQM plots in the DQMIO format")
-    file.write("process.dqmOutput = cms.OutputModule('DQMRootOutputModule',")
-    file.write("    fileName = cms.untracked.string('DQM.root')")
-    file.write(")")
-    file.write("process.FastTimerOutput = cms.EndPath( process.dqmOutput )")
-    file.write("")
-    file.write("## DQMStore service")
-    file.write("#process.load('DQMServices.Core.DQMStore_cfi')")
-    file.write("")
-    file.write("# FastTimerService client")
-    file.write("#process.load('HLTrigger.Timer.fastTimerServiceClient_cfi')")
-    file.write("process.fastTimerServiceClient.dqmPath = 'HLT/TimerService'")
-    file.write("")
-    file.write("# DQM file saver")
-    file.write("process.load('DQMServices.Components.DQMFileSaver_cfi')")
-    file.write("process.dqmSaver.workflow = '/HLT/FastTimerService/All'")
-    file.write("")
-    file.write("process.DQMFileSaverOutput = cms.EndPath( process.fastTimerServiceClient + process.dqmSaver )")
     
 def WriteCustomization(file):
     file.write("##\n")
@@ -352,6 +291,9 @@ for line in lines:
         lep_type = WriteSchedule(intermediate_file, path_list, args.paths, args.reco, args.timing)
 
     intermediate_file.write(line)
+
+if args.timing:
+    intermediate_file.write("process.DQMStore = cms.Service('DQMStore')\n")
 
 WriteCustomization(intermediate_file)
 
