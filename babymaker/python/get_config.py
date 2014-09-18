@@ -116,15 +116,20 @@ def WriteSchedule(file, path_list, path_opt, reco, timing):
     path_lines = []
     names = []
 
-    add_first_path=False
-
     for path in path_list:
         path_name = GetPathName(path)
         path_def = GetPathDef(path)
 
         if timing and path_name == 'HLTriggerFirstPath':
-            add_first_path = True
             continue
+
+        if timing and path_opt == 'all':
+            if (path_name == 'Timing_HLT_Mu15_IsoVVVL_IterTrk02_v1' or
+                path_name == 'HLT_Mu15_IterTrk02_PFHT300_v1' or
+                path_name == 'Test_HLT_Mu15_v1' or
+                path_name == 'HLT_Ele15_IsoVVVL_v1' or
+                path_name == 'HLT_Ele15_PFHT300_v1'):
+                continue
 
         maybe_electron = path_name.find('Ele') != -1
         maybe_muon = path_name.find('Mu') != -1
@@ -289,6 +294,12 @@ for line in lines:
     elif line.find('# override the GlobalTag, connection string and pfnPrefix') != -1:
         WriteOutput(intermediate_file, args.reco, args.timing)
         lep_type = WriteSchedule(intermediate_file, path_list, args.paths, args.reco, args.timing)
+    elif line.find('process.FastTimerService.dqmTimeRange              =  1000.') != -1:
+        line = line.replace('1000.','2000.')
+    elif line.find('process.FastTimerService.dqmPathTimeRange          =   100.') != -1:
+        line = line.replace('100.', '2000.')
+    elif line.find('process.FastTimerService.dqmModuleTimeRange        =    40.') != -1:
+        line = line.replace('40.', '800.')
 
     intermediate_file.write(line)
 
