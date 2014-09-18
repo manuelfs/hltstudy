@@ -5,7 +5,7 @@ import os
 
 file_names = [
     'file:/nfs-7/userdata/ald77/HLT/qcd_300_470.root',
-    'file:/nfs-7/userdata/ald77/HLT/qcd_1400_1800.root'
+    'file:/nfs-7/userdata/ald77/HLT/qcd_1400_1800.root',
     'file:/nfs-7/userdata/jaehyeok/HLT/ttbar-13tev-850evts.root',
     'file:/nfs-7/userdata/ald77/HLT/qcd_5_10.root',
     'file:/nfs-7/userdata/ald77/HLT/qcd_10_20.root',
