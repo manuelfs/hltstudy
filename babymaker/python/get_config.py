@@ -228,7 +228,7 @@ parser.add_argument('--input',
                     help = 'Path to input data file')
 parser.add_argument('--max-events',
                     type = int,
-                    default = 20,
+                    default = 30,
                     dest = 'maxevents',
                     metavar = 'EVENTS',
                     help = 'Maximum number of events to run on, -1 for all events')

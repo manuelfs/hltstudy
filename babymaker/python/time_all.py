@@ -3,6 +3,23 @@
 import subprocess
 import os
 
+def time(input_name, prefix, path_name):
+    output_name = os.path.splitext(os.path.basename(file_name))[0]
+    subprocess.call(['./get_config.py',
+                     '--paths',
+                     'all',
+                     '--max-events',
+                     '-1',
+                     '--timing',
+                     '--input',
+                     input_name,
+                     path_name])
+    subprocess.call(['cmsRun',
+                     'config.py'])
+    subprocess.call(['mv',
+                     'DQM_V0001_R000000001__HLT__FastTimerService__All.root',
+                     prefix+'_'+output_name+'.root'])
+
 file_names = [
     'file:/nfs-7/userdata/ald77/HLT/qcd_300_470.root',
     'file:/nfs-7/userdata/ald77/HLT/qcd_1400_1800.root',
@@ -26,37 +43,6 @@ file_names = [
 #    ]
 
 for file_name in file_names:
-    output_name = os.path.splitext(os.path.basename(file_name))[0]
-    print 'Now running on ' + output_name
-    subprocess.call(['./get_config.py',
-                     '--output',
-                     'jae.py',
-                     '--paths',
-                     'all',
-                     '--max-events',
-                     '-1',
-                     '--timing',
-                     '--input',
-                     file_name,
-                     '/users/jaehyeok/HLTRun2/SingleLeptonSUSY'])
-    subprocess.call(['./get_config.py',
-                     '--output',
-                     'manuel.py',
-                     '--paths',
-                     'all',
-                     '--max-events',
-                     '-1',
-                     '--timing',
-                     '--input',
-                     file_name,
-                     '/users/manuelf/SingleLeptonSUSY'])
-    subprocess.call(['cmsRun',
-                     'manuel.py'])
-    subprocess.call(['mv',
-                     'DQM_V0001_R000000001__HLT__FastTimerService__All.root',
-                     'manuel_'+output_name+'.root'])
-    subprocess.call(['cmsRun',
-                     'jae.py'])
-    subprocess.call(['mv',
-                     'DQM_V0001_R000000001__HLT__FastTimerService__All.root',
-                     'jae_'+output_name+'.root'])
+    time(file_name, 'jae', '/users/jaehyeok/HLTRun2/SingleLeptonSUSY')
+    time(file_name, 'manuel', '/users/manuelf/SingleLeptonSUSY')
+    time(file_name, 'olivito', '/users/olivito/dev_7_1_0/htmet')
