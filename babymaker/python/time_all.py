@@ -18,7 +18,7 @@ def time(input_name, prefix, path_name):
                      'config.py'])
     subprocess.call(['mv',
                      'DQM_V0001_R000000001__HLT__FastTimerService__All.root',
-                     prefix+'_'+output_name+'.root'])
+                     'timing_results/'+prefix+'_'+output_name+'.root'])
 
 file_names = [
     'file:/nfs-7/userdata/ald77/HLT/qcd_300_470.root',
@@ -28,18 +28,18 @@ file_names = [
     'file:/nfs-7/userdata/ald77/HLT/qcd_10_20.root',
     'file:/nfs-7/userdata/ald77/HLT/qcd_20_30.root',
     'file:/nfs-7/userdata/ald77/HLT/qcd_30_50.root',
-    'file:/nfs-7/userdata/ald77/HLT/qcd_50_80_.root',
+    'file:/nfs-7/userdata/ald77/HLT/qcd_50_80.root',
     'file:/nfs-7/userdata/ald77/HLT/qcd_80_120.root',
     'file:/nfs-7/userdata/ald77/HLT/qcd_120_170.root',
     'file:/nfs-7/userdata/ald77/HLT/qcd_170_300.root',
     'file:/nfs-7/userdata/ald77/HLT/qcd_470_600.root',
     'file:/nfs-7/userdata/ald77/HLT/qcd_600_800.root',
     'file:/nfs-7/userdata/ald77/HLT/qcd_800_1000.root',
-    'file:/nfs-7/userdata/ald77/HLT/qcd_1000_1400.root',
+    'file:/nfs-7/userdata/ald77/HLT/qcd_1000_1400.root'
     ]
 
 #file_names = [
-#    'file:/nfs-7/userdata/jaehyeok/HLT/ttbar-13tev-850evts.root',
+#    'file:/nfs-7/userdata/jaehyeok/HLT/ttbar-13tev-850evts.root'
 #    ]
 
 for file_name in file_names:
