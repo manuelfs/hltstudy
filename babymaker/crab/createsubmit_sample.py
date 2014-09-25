@@ -20,7 +20,7 @@ dsetnew = dsetnew.replace('/GEN-SIM-RAW','')
 dsetnew = dsetnew.replace('/','_')
 
 
-samples = ['el15vvvl', 'el15noiso']
+samples = ['el15noiso720']
 for sam in samples:
     task = 'jobs/'+dsetnew+'_'+sam
     os.system('rm -rf '+task)
