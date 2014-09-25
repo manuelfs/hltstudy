@@ -1,4 +1,4 @@
-# /users/manuelf/ForBabies/V3 (CMSSW_7_2_0_pre6)
+# /users/manuelf/ForBabies/V5 (CMSSW_7_2_0_pre6)
 
 import FWCore.ParameterSet.Config as cms
 
@@ -10,7 +10,7 @@ process.load('hltstudy.babymaker.IsoElectronProducer_cfi')
 process.load('hltstudy.babymaker.babymakerel_cfi')
 
 process.HLTConfigVersion = cms.PSet(
-  tableName = cms.string('/users/manuelf/ForBabies/V3')
+  tableName = cms.string('/users/manuelf/ForBabies/V5')
 )
 
 process.hltGetConditions = cms.EDAnalyzer( "EventSetupRecordDataGetter",
@@ -6778,7 +6778,7 @@ if 'hltDQML1SeedLogicScalers' in process.__dict__:
 
 # limit the number of events to be processed
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32( 200 )
+    input = cms.untracked.int32( 30 )
 )
 
 # enable the TrigReport and TimeReport
@@ -6790,7 +6790,7 @@ process.options = cms.untracked.PSet(
 process.load('FWCore.MessageService.MessageLogger_cfi')
 process.out = cms.OutputModule(
         'PoolOutputModule',
-        fileName     = cms.untracked.string('ntuple_hlt_el15noiso720.root'), ##
+        fileName     = cms.untracked.string('ntuple_hlt_el15_720.root'), ##
         dropMetaData = cms.untracked.string('ALL')
         #SelectEvents = cms.untracked.PSet(
             #SelectEvents = cms.vstring('HLT_L1HTT')
@@ -6807,7 +6807,7 @@ process.SeqHLT_Ele27_WP85_Gsf_v1 = cms.Sequence( process.HLTBeginSequence + proc
 process.SeqHLT_PFMET120_NoiseCleaned_BTagCSV07_v1 = cms.Sequence( process.HLTBeginSequence + process.hltL1sL1ETM36ORETM40 + process.hltPrePFMET120NoiseCleanedBTagCSV07 + process.HLTRecoMETSequence + process.hltMET70 + process.HLTHBHENoiseCleanerSequence + process.hltMetClean + process.hltMETClean70 + process.HLTAK4CaloJetsSequence + process.hltMetCleanUsingJetID + process.hltMETCleanUsingJetID70 + process.hltSusyPreBtagJetFilter + process.HLTFastPrimaryVertexSequence + process.hltFastPVPixelVertexSelector + process.HLTBtagCSVSequenceL3 + process.hltBLifetimeL3FilterCSVsusy + process.HLTAK4PFJetsSequence + process.hltPFMETProducer + process.hltPFMET120Filter + process.antiktGenJets + process.HLTEndSequence )
 process.SeqHLT_PFHT350_PFMET120_NoiseCleaned_v1 = cms.Sequence( process.HLTBeginSequence + process.hltL1sL1SingleEG5 + process.hltPrePFHT350PFMET120NoiseCleaned + process.HLTRecoMETSequence + process.hltMET70 + process.HLTHBHENoiseCleanerSequence + process.hltMetClean + process.hltMETClean60 + process.HLTAK4CaloJetsSequence + process.hltMetCleanUsingJetID + process.hltMETCleanUsingJetID60 + process.hltHtMht + process.hltHt280 + process.HLTAK4PFJetsSequence + process.hltPFMETProducer + process.hltPFMET120Filter + process.hltPFHT + process.hltPFHT350 + process.antiktGenJets + process.HLTEndSequence )
 process.SeqHLT_PFHT900_v1 = cms.Sequence( process.HLTBeginSequence + process.hltL1sL1SingleEG5 + process.hltPreEle15NoIsoBTagtop8PFHTPFMET + process.HLTAK4CaloJetsSequence + process.hltHtMht + process.hltHt700 + process.HLTAK4PFJetsSequence + process.hltPFHT + process.hltPFHT900 + process.antiktGenJets + process.HLTEndSequence )
-process.SeqHLT_Ele15_NoIso_BTagtop8_PFHT_PFMET_v1 = cms.Sequence( process.HLTBeginSequence + process.hltL1sL1HTT200 + process.hltL1sL1SingleEG5 + process.hltPreEle15NoIsoBTagtop8PFHTPFMET + process.HLTAK4CaloJetsSequence + process.hltHtMht + process.HLTEle15IsoVVVLGsfSequence + process.hltSusyPreBtagJetFilter + process.HLTFastPrimaryVertexSequence + process.hltFastPVPixelVertexSelector + process.HLTBtagCSVSequenceL3 + process.hltBLifetimeL3FilterCSVsusy + process.HLTAK4PFJetsSequence + process.hltPFHT + process.hltPFMETProducer + process.antiktGenJets + process.HLTEndSequence )
+process.SeqHLT_Ele15_NoIso_BTagtop8_PFHT_PFMET_v1 = cms.Sequence( process.HLTBeginSequence + process.hltL1sL1HTT200 + process.hltL1sL1SingleEG5 + process.hltPreEle15NoIsoBTagtop8PFHTPFMET + process.HLTAK4CaloJetsSequence + process.hltHtMht + process.HLTEle15IsoVVVLGsfSequence + process.hltSusyPreBtagJetFilter + process.HLTFastPrimaryVertexSequence + process.HLTBtagCSVSequenceL3 + process.HLTAK4PFJetsSequence + process.hltPFHT + process.hltPFMETProducer + process.antiktGenJets + process.HLTEndSequence )
 process.SeqHLTriggerFinalPath = cms.Sequence( process.hltGtDigis + process.hltScalersRawToDigi + process.hltFEDSelector + process.hltTriggerSummaryAOD + process.hltTriggerSummaryRAW )
 
 process.HLTriggerFirstPath = cms.Path( process.SeqHLTriggerFirstPath + process.babymaker )

@@ -14,3 +14,7 @@
 /TT_Tune4C_13TeV-pythia8-tauola/Fall13dr-tsg_PU40bx25_POSTLS162_V2-v1/GEN-SIM-RAW
 /WToMuNu_Tune4C_13TeV-pythia8/Fall13dr-tsg_PU40bx25_POSTLS162_V2-v1/GEN-SIM-RAW
 /WToENu_Tune4C_13TeV-pythia8/Fall13dr-tsg_PU40bx25_POSTLS162_V2-v1/GEN-SIM-RAW
+/SMS-T1tttt_2J_mGl-1500_mLSP-100_Tune4C_13TeV-madgraph-tauola/Spring14dr-PU_S14_POSTLS170_V6-v2/GEN-SIM-RAW
+/SMS-T1tttt_2J_mGl-1500_mLSP-100_Tune4C_13TeV-madgraph-tauola/Spring14dr-PU20bx25_POSTLS170_V5-v2/GEN-SIM-RAW
+/SMS-T1tttt_2J_mGl-1200_mLSP-800_Tune4C_13TeV-madgraph-tauola/Spring14dr-PU_S14_POSTLS170_V6-v2/GEN-SIM-RAW
+/SMS-T1tttt_2J_mGl-1200_mLSP-800_Tune4C_13TeV-madgraph-tauola/Spring14dr-PU20bx25_POSTLS170_V5-v2/GEN-SIM-RAW
