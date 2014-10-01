@@ -2,14 +2,17 @@ hltstudy
 ==========
 
 Code to make flat ntuples with HLT quantities.
-It's been tested on `CMSSW_7_1_6`. 
+It's been tested on `CMSSW_7_2_0_pre6`. 
 
 #### Making ntuples
-Issue the following commands on a machine with SLC6 and CMSSW 7.1.X:
+Issue the following commands on a machine with SLC6 and CMSSW_7_2_0_pre6:
 
-    cmsrel CMSSW_7_1_6
-    cd CMSSW_7_1_6/src
+    cmsrel CMSSW_7_2_0_pre6
+    cd CMSSW_7_2_0_pre6/src
     cmsenv
+    git cms-merge-topic --unsafe cms-l1t-offline:Stage1plusHLT_V0 ### Only for 2015 L1 menu
+    git cms-addpkg L1TriggerConfig/L1GtConfigProducers ### Only for 2015 L1 menu
+    cp -a /afs/cern.ch/user/g/ghete/public/L1Menu/L1Menu_Collisions2015_25ns_v1/xml/Rev.1.1/L1Menu_Collisions2015_25ns_v1_L1T_Scales_20101224_Imp0_0x102f.xml L1TriggerConfig/L1GtConfigProducers/data/Luminosity/startup/ ### Only for 2015 L1 menu
     git clone git@github.com:manuelfs/hltstudy
     scram b -j 4
     cmsRun hltstudy/babymaker/python/run_el15.py
