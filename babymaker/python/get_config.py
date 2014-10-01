@@ -162,9 +162,6 @@ def WriteSchedule(file, path_list, path_opt, reco, timing):
 
     if timing:
         file.write('process.HLTriggerFirstPath = cms.Path( process.SeqHLTriggerFirstPath )\n')
-    for path in path_lines:
-        file.write(path)
-    file.write("\n")
 
     to_schedule = [1]
     if path_opt == 'all':
@@ -183,29 +180,44 @@ def WriteSchedule(file, path_list, path_opt, reco, timing):
 
     lep_type = 'mu'
     if len(names) > 0:
-        if not timing:
-            file.write('process.schedule = cms.Schedule( ')
-        else:
-            file.write('process.schedule = cms.Schedule( process.HLTriggerFirstPath , ')
         already_added = set()
         for path in to_schedule:
             if 0 < path <= len(names):
                 if not path in already_added:
                     if names[path-1].find('Ele') != -1:
                         lep_type = 'el'
-                    file.write('process.'+names[path-1]+', ')
+                    file.write(path_lines[path-1])
                     already_added.add(path)
                 else:
-                    print 'Warning: WriteSchedule has already scheduled path #'+str(path)+' ('+names[path-1]+') and will not schedule it again.'
+                    print 'Warning: WriteSchedule has already added path #'+str(path)+' ('+names[path-1]+') and will not add it again.'
             else:
                 print 'Warning: WriteSchedule does not know about path #'+str(path)+' and will skip it.'
-        if not timing:
-            file.write('process.outpath ) ##\n\n')
-        else:
-            file.write('process.TimingOutput ) ##\n\n')
 
     return lep_type
-    
+
+def WriteTimingOutput(file):
+    file.write("# FastTimerServiceClient\n")
+    file.write("process.fastTimerServiceClient = cms.EDAnalyzer( 'FastTimerServiceClient',\n")
+    file.write("                                                 dqmPath = cms.untracked.string( 'HLT/TimerService' )\n")
+    file.write("                                                 )\n")
+    file.write("\n")
+    file.write("# DQM file saver\n")
+    file.write("process.dqmFileSaver = cms.EDAnalyzer( 'DQMFileSaver',\n")
+    file.write("                                       convention        = cms.untracked.string( 'Offline' ),\n")
+    file.write("                                       workflow          = cms.untracked.string( '/HLT/FastTimerService/All' ),\n")
+    file.write("                                       dirName           = cms.untracked.string( '.' ),\n")
+    file.write("                                       saveByRun         = cms.untracked.int32(1),\n")
+    file.write("                                       saveByLumiSection = cms.untracked.int32(-1),\n")
+    file.write("                                       saveByEvent       = cms.untracked.int32(-1),\n")
+    file.write("                                       saveByTime        = cms.untracked.int32(-1),\n")
+    file.write("                                       saveByMinute      = cms.untracked.int32(-1),\n")
+    file.write("                                       saveAtJobEnd      = cms.untracked.bool(False),\n")
+    file.write("                                       forceRunNumber    = cms.untracked.int32(-1),\n")
+    file.write("                                       )\n")
+    file.write("\n")
+    file.write("process.TimingOutput = cms.EndPath( process.fastTimerServiceClient + process.dqmFileSaver )\n")
+    file.write('\n')
+
 def WriteCustomization(file):
     file.write("##\n")
     file.write("from SLHCUpgradeSimulations.Configuration.postLS1Customs import *\n")
@@ -276,6 +288,7 @@ intermediate_file = open(intermediate_file_name, 'w')
 
 path_list = []
 lep_type = 'mu'
+found_timer_service = False
 
 lines = base_file.readlines()
 for line in lines:
@@ -294,12 +307,17 @@ for line in lines:
     elif line.find('# override the GlobalTag, connection string and pfnPrefix') != -1:
         WriteOutput(intermediate_file, args.reco, args.timing)
         lep_type = WriteSchedule(intermediate_file, path_list, args.paths, args.reco, args.timing)
-    elif line.find('process.FastTimerService.dqmTimeRange              =  1000.') != -1:
+    elif line.find('process.FastTimerService.dqmTimeRange') != -1:
         line = line.replace('1000.','2000.')
-    elif line.find('process.FastTimerService.dqmPathTimeRange          =   100.') != -1:
+    elif line.find('process.FastTimerService.dqmPathTimeRange') != -1:
         line = line.replace('100.', '2000.')
-    elif line.find('process.FastTimerService.dqmModuleTimeRange        =    40.') != -1:
+    elif line.find('process.FastTimerService.dqmModuleTimeRange') != -1:
         line = line.replace('40.', '800.')
+    elif line.find('FastTimerServiceClient') != -1:
+        found_timer_service = True
+    elif line.find('CMSSW version specific customizations') != -1:
+        if args.timing and not found_timer_service:
+            WriteTimingOutput(intermediate_file)
 
     intermediate_file.write(line)
 
@@ -308,7 +326,7 @@ if args.timing:
 
 WriteCustomization(intermediate_file)
 
-intermediate_file.close();
+intermediate_file.close()
 base_file.close()
 
 intermediate_file = open(intermediate_file_name, 'r')
