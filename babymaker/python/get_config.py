@@ -230,7 +230,7 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument('config',
                     nargs='?',
-                    default='/users/jaehyeok/HLTRun2/SingleLeptonSUSY',
+                    default='/users/jaehyeok/HLTRun2/SingleLeptonSUSY_720pre6',
                     help = 'A confDB HLT configuration path')
 parser.add_argument('--output',
                     default = 'config.py',
@@ -249,6 +249,9 @@ parser.add_argument('--paths',
                     choices=['select','first','all'],
                     default='select',
                     help = 'Choose to schedule manually selected paths, the first path, or all paths; options are %(choices)s')
+parser.add_argument('--oldL1',
+                    action = 'store_true',
+                    help = 'Use 2012 L1 menu')
 
 mode = parser.add_mutually_exclusive_group()
 mode.add_argument('--reco',
@@ -265,21 +268,29 @@ intermediate_file_name = subprocess.check_output('mktemp')[:-1]
 
 base_file = open(base_file_name, 'w')
 hlt_args=['hltGetConfiguration',
-                 args.config,
-                 '--full',
-                 '--offline',
-                 '--mc',
-                 '--unprescale',
-                 '--process',
-                 'reHLT']
+          args.config,
+          '--full',
+          '--offline',
+          '--mc',
+          '--unprescale',
+          '--process',
+          'reHLT',
+          '--max-events',
+          str(args.maxevents),
+          '--input',
+          args.input,
+          '--globaltag']
+if args.oldL1:
+    hlt_args.extend(['auto:startup_GRun'])
+else:
+    hlt_args.extend(['auto:upgradePLS1',
+                     '--l1-emulator',
+                     'gt',
+                     '--l1Xml',
+                     'L1Menu_Collisions2015_25ns_v1_L1T_Scales_20101224_Imp0_0x102f.xml'])
 if args.timing:
     hlt_args.extend(['--timing'])
-hlt_args.extend(['--max-events',
-                 str(args.maxevents),
-                 '--input',
-                 args.input,
-                 '--globaltag',
-                 'auto:startup_GRun'])
+
 subprocess.call(hlt_args, stdout=base_file)
 base_file.close()
 
