@@ -1,10 +1,10 @@
-# /dev/CMSSW_7_2_0/GRun/V4 (CMSSW_7_2_0_pre6_HLT1)
+# /dev/CMSSW_7_1_2/HLT/V27 (CMSSW_7_1_8)
 
 import FWCore.ParameterSet.Config as cms
 
 
 HLTConfigVersion = cms.PSet(
-  tableName = cms.string('/dev/CMSSW_7_2_0/GRun/V4')
+  tableName = cms.string('/dev/CMSSW_7_1_2/HLT/V27')
 )
 
 HLTIter4PSetTrajectoryFilterIT = cms.PSet( 
@@ -157,7 +157,7 @@ HLTIter4PSetTrajectoryBuilderIT = cms.PSet(
   ComponentType = cms.string( "CkfTrajectoryBuilder" ),
   propagatorOpposite = cms.string( "PropagatorWithMaterialParabolicMfOpposite" ),
   MeasurementTrackerName = cms.string( "hltIter4ESPMeasurementTracker" ),
-  estimator = cms.string( "hltESPChi2ChargeMeasurementEstimator16" ),
+  estimator = cms.string( "hltESPChi2MeasurementEstimator16" ),
   TTRHBuilder = cms.string( "hltESPTTRHBWithTrackAngle" ),
   updator = cms.string( "hltESPKFUpdator" ),
   alwaysUseInvalidHits = cms.bool( False ),
@@ -172,7 +172,7 @@ HLTIter3PSetTrajectoryBuilderIT = cms.PSet(
   ComponentType = cms.string( "CkfTrajectoryBuilder" ),
   propagatorOpposite = cms.string( "PropagatorWithMaterialParabolicMfOpposite" ),
   MeasurementTrackerName = cms.string( "hltIter3ESPMeasurementTracker" ),
-  estimator = cms.string( "hltESPChi2ChargeMeasurementEstimator16" ),
+  estimator = cms.string( "hltESPChi2MeasurementEstimator16" ),
   TTRHBuilder = cms.string( "hltESPTTRHBWithTrackAngle" ),
   updator = cms.string( "hltESPKFUpdator" ),
   alwaysUseInvalidHits = cms.bool( False ),
@@ -186,7 +186,7 @@ HLTIter2PSetTrajectoryBuilderIT = cms.PSet(
   ComponentType = cms.string( "CkfTrajectoryBuilder" ),
   propagatorOpposite = cms.string( "PropagatorWithMaterialParabolicMfOpposite" ),
   MeasurementTrackerName = cms.string( "hltIter2ESPMeasurementTracker" ),
-  estimator = cms.string( "hltESPChi2ChargeMeasurementEstimator16" ),
+  estimator = cms.string( "hltESPChi2MeasurementEstimator16" ),
   TTRHBuilder = cms.string( "hltESPTTRHBWithTrackAngle" ),
   updator = cms.string( "hltESPKFUpdator" ),
   alwaysUseInvalidHits = cms.bool( False ),
@@ -200,7 +200,7 @@ HLTIter1PSetTrajectoryBuilderIT = cms.PSet(
   ComponentType = cms.string( "CkfTrajectoryBuilder" ),
   propagatorOpposite = cms.string( "PropagatorWithMaterialParabolicMfOpposite" ),
   MeasurementTrackerName = cms.string( "hltIter1ESPMeasurementTracker" ),
-  estimator = cms.string( "hltESPChi2ChargeMeasurementEstimator16" ),
+  estimator = cms.string( "hltESPChi2MeasurementEstimator16" ),
   TTRHBuilder = cms.string( "hltESPTTRHBWithTrackAngle" ),
   updator = cms.string( "hltESPKFUpdator" ),
   alwaysUseInvalidHits = cms.bool( False ),
@@ -369,7 +369,7 @@ HLTIter0PSetTrajectoryBuilderIT = cms.PSet(
   maxCand = cms.int32( 2 ),
   ComponentType = cms.string( "CkfTrajectoryBuilder" ),
   propagatorOpposite = cms.string( "PropagatorWithMaterialParabolicMfOpposite" ),
-  estimator = cms.string( "hltESPChi2ChargeMeasurementEstimator9" ),
+  estimator = cms.string( "hltESPChi2MeasurementEstimator9" ),
   TTRHBuilder = cms.string( "hltESPTTRHBWithTrackAngle" ),
   updator = cms.string( "hltESPKFUpdator" ),
   alwaysUseInvalidHits = cms.bool( False ),
@@ -450,9 +450,21 @@ HLTPSetPvClusterComparerForIT = cms.PSet(
   track_chi2_max = cms.double( 20.0 ),
   track_prob_min = cms.double( -1.0 )
 )
-streams = cms.PSet(  A = cms.vstring( 'InitialPD',
-  'Templates' ) )
+streams = cms.PSet( 
+  A = cms.vstring( 'InitialPD',
+    'Templates' ),
+  ALCAP0 = cms.vstring( 'AlCaP0' ),
+  ALCAPHISYM = cms.vstring( 'AlCaPhiSym' ),
+  HLTDQM = cms.vstring( 'OnlineHltMonitor',
+    'OnlineHltMonitorHI' ),
+  HLTMON = cms.vstring( 'OfflineMonitor',
+    'OfflineMonitorHI' ),
+  RPCMON = cms.vstring( 'RPCMonitor' ),
+  ReleaseValidation = cms.vstring(  )
+)
 datasets = cms.PSet( 
+  AlCaP0 = cms.vstring(  ),
+  AlCaPhiSym = cms.vstring(  ),
   InitialPD = cms.vstring( 'HLT_AK8PFJet360TrimMod_Mass30_v1',
     'HLT_Dimuon13_PsiPrime_v1',
     'HLT_Dimuon13_Upsilon_v1',
@@ -467,7 +479,7 @@ datasets = cms.PSet(
     'HLT_DoubleMu4_JpsiTrk_Displaced_v1',
     'HLT_DoubleMu4_LowMassNonResonantTrk_Displaced_v1',
     'HLT_DoubleMu4_PsiPrimeTrk_Displaced_v1',
-    'HLT_DoublePhoton85_v1',
+    'HLT_DoublePho85_v1',
     'HLT_Ele17_Ele12_Ele10_CaloId_TrackId_v1',
     'HLT_Ele20WP60_Ele8_Mass55_v1',
     'HLT_Ele22_eta2p1_WP85_Gsf_LooseIsoPFTau20_v1',
@@ -510,9 +522,13 @@ datasets = cms.PSet(
     'HLT_Mu42NoFiltersNoVtx_Photon42_CaloIdL_v1',
     'HLT_Mu8_TrkIsoVVL_Ele23_Gsf_CaloId_TrackId_Iso_MediumWP_v1',
     'HLT_PFHT350_PFMET120_NoiseCleaned_v1',
+    'HLT_PFHT550_4Jet_v1',
+    'HLT_PFHT650_4Jet_v1',
+    'HLT_PFHT750_4Jet_v1',
     'HLT_PFHT900_v1',
     'HLT_PFMET120_NoiseCleaned_BTagCSV07_v1',
     'HLT_PFMET170_NoiseCleaned_v1',
+    'HLT_PFMHT100_SingleCentralJet60_BTagCSV0p6_v1',
     'HLT_Photon135_PFMET40_v1',
     'HLT_Photon135_VBF_v1',
     'HLT_Photon150_PFMET40_v1',
@@ -537,7 +553,24 @@ datasets = cms.PSet(
     'HLT_Photon90_R9Id90_HE10_Iso40_EBOnly_PFMET40_v1',
     'HLT_Photon90_R9Id90_HE10_Iso40_EBOnly_VBF_v1',
     'HLT_Physics_v1' ),
-  Templates = cms.vstring( 'HLT_PFJet260_v1',
+  OfflineMonitor = cms.vstring(  ),
+  OfflineMonitorHI = cms.vstring(  ),
+  OnlineHltMonitor = cms.vstring(  ),
+  OnlineHltMonitorHI = cms.vstring(  ),
+  RPCMonitor = cms.vstring(  ),
+  Templates = cms.vstring( 'HLT_BTagCSV07_v1',
+    'HLT_CaloJet260_v1',
+    'HLT_DoubleMediumIsoPFTau40_Trk1_eta2p1_v1',
+    'HLT_DoubleMu4_Jpsi_Displaced_v1',
+    'HLT_Ele17_Ele8_Gsf_v1',
+    'HLT_HT650_v1',
+    'HLT_IterativeTracking_v1',
+    'HLT_Mu17_NoFilters_v1',
+    'HLT_PFHT650_v1',
+    'HLT_PFJet260_v1',
+    'HLT_PFJet40_v1',
+    'HLT_PFchMET90_NoiseCleaned_v1',
+    'HLT_Photon20_CaloIdVL_IsoL_v1',
     'HLT_ReducedIterativeTracking_v1' )
 )
 
@@ -769,20 +802,6 @@ EcalEndcapGeometryFromDBEP = cms.ESProducer( "EcalEndcapGeometryFromDBEP",
 EcalLaserCorrectionService = cms.ESProducer( "EcalLaserCorrectionService" )
 EcalPreshowerGeometryFromDBEP = cms.ESProducer( "EcalPreshowerGeometryFromDBEP",
   applyAlignment = cms.bool( True )
-)
-hltESPChi2ChargeMeasurementEstimator9 = cms.ESProducer( "Chi2ChargeMeasurementEstimatorESProducer",
-  minGoodStripCharge = cms.double( 1724.0 ),
-  ComponentName = cms.string( "hltESPChi2ChargeMeasurementEstimator9" ),
-  pTChargeCutThreshold = cms.double( 15.0 ),
-  nSigma = cms.double( 3.0 ),
-  MaxChi2 = cms.double( 9.0 )
-)
-hltESPChi2ChargeMeasurementEstimator16 = cms.ESProducer( "Chi2ChargeMeasurementEstimatorESProducer",
-  minGoodStripCharge = cms.double( 1724.0 ),
-  ComponentName = cms.string( "hltESPChi2ChargeMeasurementEstimator16" ),
-  pTChargeCutThreshold = cms.double( -1.0 ),
-  nSigma = cms.double( 3.0 ),
-  MaxChi2 = cms.double( 16.0 )
 )
 HcalGeometryFromDBEP = cms.ESProducer( "HcalGeometryFromDBEP",
   applyAlignment = cms.bool( False ),
@@ -1201,11 +1220,11 @@ hcalRecAlgos = cms.ESProducer( "HcalRecAlgoESProducer",
 )
 hcal_db_producer = cms.ESProducer( "HcalDbProducer" )
 hltCombinedSecondaryVertex = cms.ESProducer( "CombinedSecondaryVertexESProducer",
-  trackPairV0Filter = cms.PSet(  k0sMassWindow = cms.double( 0.03 ) ),
+  categoryVariableName = cms.string( "vertexCategory" ),
   useTrackWeights = cms.bool( True ),
   useCategories = cms.bool( True ),
   pseudoMultiplicityMin = cms.uint32( 2 ),
-  categoryVariableName = cms.string( "vertexCategory" ),
+  correctVertexMass = cms.bool( True ),
   trackSelection = cms.PSet( 
     totalHitsMin = cms.uint32( 0 ),
     jetDeltaRMax = cms.double( 0.3 ),
@@ -1227,7 +1246,7 @@ hltCombinedSecondaryVertex = cms.ESProducer( "CombinedSecondaryVertexESProducer"
   calibrationRecords = cms.vstring( 'CombinedSVRecoVertex',
     'CombinedSVPseudoVertex',
     'CombinedSVNoVertex' ),
-  correctVertexMass = cms.bool( True ),
+  trackPairV0Filter = cms.PSet(  k0sMassWindow = cms.double( 0.03 ) ),
   charmCut = cms.double( 1.5 ),
   vertexFlip = cms.bool( False ),
   minimumTrackWeight = cms.double( 0.5 ),
@@ -1742,22 +1761,14 @@ hltESPStraightLinePropagator = cms.ESProducer( "StraightLinePropagatorESProducer
   PropagationDirection = cms.string( "alongMomentum" )
 )
 hltESPStripCPEfromTrackAngle = cms.ESProducer( "StripCPEESProducer",
-  ComponentType = cms.string( "StripCPEfromTrackAngle" ),
+  TanDiffusionAngle = cms.double( 0.01 ),
+  UncertaintyScaling = cms.double( 1.42 ),
+  ThicknessRelativeUncertainty = cms.double( 0.02 ),
+  MaybeNoiseThreshold = cms.double( 3.5 ),
   ComponentName = cms.string( "hltESPStripCPEfromTrackAngle" ),
-  parameters = cms.PSet( 
-    mLC_P2 = cms.double( 0.3 ),
-    mLC_P1 = cms.double( 0.618 ),
-    mLC_P0 = cms.double( -0.326 ),
-    useLegacyError = cms.bool( False ),
-    mTEC_P1 = cms.double( 0.471 ),
-    mTEC_P0 = cms.double( -1.885 ),
-    mTOB_P0 = cms.double( -1.026 ),
-    mTOB_P1 = cms.double( 0.253 ),
-    mTIB_P0 = cms.double( -0.742 ),
-    mTIB_P1 = cms.double( 0.202 ),
-    mTID_P0 = cms.double( -1.427 ),
-    mTID_P1 = cms.double( 0.433 )
-  )
+  MinimumUncertainty = cms.double( 0.01 ),
+  ComponentType = cms.string( "StripCPEfromTrackAngle" ),
+  NoiseThreshold = cms.double( 2.3 )
 )
 hltESPTTRHBWithTrackAngle = cms.ESProducer( "TkTransientTrackingRecHitBuilderESProducer",
   StripCPE = cms.string( "hltESPStripCPEfromTrackAngle" ),
@@ -1993,17 +2004,6 @@ trackerTopologyConstants = cms.ESProducer( "TrackerTopologyEP",
   pxf_moduleMask = cms.uint32( 63 )
 )
 
-EvFDaqDirector = cms.Service( "EvFDaqDirector",
-  buBaseDir = cms.untracked.string( "." ),
-  runNumber = cms.untracked.uint32( 0 ),
-  baseDir = cms.untracked.string( "." )
-)
-FastMonitoringService = cms.Service( "FastMonitoringService",
-  slowName = cms.untracked.string( "slowmoni" ),
-  sleepTime = cms.untracked.int32( 1 ),
-  fastMonIntervals = cms.untracked.uint32( 2 ),
-  fastName = cms.untracked.string( "fastmoni" )
-)
 DQMStore = cms.Service( "DQMStore",
   referenceFileName = cms.untracked.string( "" ),
   verbose = cms.untracked.int32( 0 ),
@@ -2148,38 +2148,4 @@ MessageLogger = cms.Service( "MessageLogger",
     'hltL3TkTracksFromL2IOHit',
     'hltL3TkTracksFromL2OIHit' )
 )
-# PrescaleService = cms.Service( "PrescaleService",
-#   forceDefault = cms.bool( False ),
-#   prescaleTable = cms.VPSet( 
-#     cms.PSet(  pathName = cms.string( "HLT_Mu40_v1" ),
-#       prescales = cms.vuint32( 0, 1, 1, 0, 0, 0, 0 )
-#     ),
-#     cms.PSet(  pathName = cms.string( "HLT_Mu17_Mu8_v1" ),
-#       prescales = cms.vuint32( 50, 50, 50, 0, 0, 0, 0 )
-#     ),
-#     cms.PSet(  pathName = cms.string( "HLT_Mu17_TkMu8_v1" ),
-#       prescales = cms.vuint32( 50, 50, 50, 0, 0, 0, 0 )
-#     ),
-#     cms.PSet(  pathName = cms.string( "HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_v1" ),
-#       prescales = cms.vuint32( 0, 0, 0, 0, 0, 0, 0 )
-#     ),
-#     cms.PSet(  pathName = cms.string( "HLT_PFJet260_v1" ),
-#       prescales = cms.vuint32( 0, 0, 0, 0, 0, 0, 0 )
-#     ),
-#     cms.PSet(  pathName = cms.string( "HLT_ReducedIterativeTracking_v1" ),
-#       prescales = cms.vuint32( 0, 0, 0, 0, 0, 0, 0 )
-#     ),
-#     cms.PSet(  pathName = cms.string( "AOutput" ),
-#       prescales = cms.vuint32( 1, 1, 1, 0, 0, 1, 0 )
-#     )
-#   ),
-#   lvl1DefaultLabel = cms.string( "7e33" ),
-#   lvl1Labels = cms.vstring( 'HalfRate',
-#     '8e33',
-#     '7e33',
-#     'EM1',
-#     'EM2',
-#     'CirculatingBeam',
-#     'CirculatingBeam+HighRandom' )
-# )
 

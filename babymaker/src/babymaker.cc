@@ -57,6 +57,11 @@ babymaker::babymaker(const edm::ParameterSet& iConfig) {
   produces<std::vector<float> > ("elsecaliso").setBranchAlias("els_ecal_iso");
   produces<std::vector<float> > ("elshcaliso").setBranchAlias("els_hcal_iso");
   produces<std::vector<float> > ("elstrackiso").setBranchAlias("els_track_iso");
+  produces<std::vector<float> > ("elsclustershape").setBranchAlias("els_clustershape");
+  produces<std::vector<float> > ("elshe").setBranchAlias("els_he");
+  produces<std::vector<float> > ("elseminusp").setBranchAlias("els_eminusp");
+  produces<std::vector<float> > ("elsdeta").setBranchAlias("els_deta");
+  produces<std::vector<float> > ("elsdphi").setBranchAlias("els_dphi");
     
   produces<std::vector<float> > ("muspt").setBranchAlias("mus_pt");
   produces<std::vector<float> > ("museta").setBranchAlias("mus_eta");
@@ -129,6 +134,12 @@ babymaker::babymaker(const edm::ParameterSet& iConfig) {
   hltElectronEcalIsoInputTag = edm::InputTag(hltElectronInputString, "eleecaliso");
   hltElectronHcalIsoInputTag = edm::InputTag(hltElectronInputString, "elehcaliso");
   hltElectronTrackIsoInputTag = edm::InputTag(hltElectronInputString, "eletrackiso");
+  hltElectronClusterShapeInputTag = edm::InputTag(hltElectronInputString, "eleclustershape");
+  hltElectronHEInputTag = edm::InputTag(hltElectronInputString, "elehe");
+  hltElectronEminusPInputTag = edm::InputTag(hltElectronInputString, "eleeminusp");
+  hltElectronDEtaInputTag = edm::InputTag(hltElectronInputString, "eledeta");
+  hltElectronDPhiInputTag = edm::InputTag(hltElectronInputString, "eledphi");
+
   hltMuonInputString = iConfig.getParameter<std::string>("hltMuonInputString_");
   hltMuonPtInputTag = edm::InputTag(hltMuonInputString, "mupt");
   hltMuonPhiInputTag = edm::InputTag(hltMuonInputString, "muphi");
@@ -169,6 +180,11 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   auto els_ecal_iso = make_auto(new std::vector<float>);
   auto els_hcal_iso = make_auto(new std::vector<float>);
   auto els_track_iso = make_auto(new std::vector<float>);
+  auto els_clustershape = make_auto(new std::vector<float>);
+  auto els_he = make_auto(new std::vector<float>);
+  auto els_eminusp = make_auto(new std::vector<float>);
+  auto els_deta = make_auto(new std::vector<float>);
+  auto els_dphi = make_auto(new std::vector<float>);
 
   auto ele_pt = make_auto(new std::vector<float>);
   auto ele_phi = make_auto(new std::vector<float>);
@@ -404,6 +420,22 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     for(const auto& iso: *els_ecal_iso_h) els_ecal_iso->push_back(iso);
     for(const auto& iso: *els_hcal_iso_h) els_hcal_iso->push_back(iso);
     for(const auto& iso: *els_track_iso_h) els_track_iso->push_back(iso);
+
+    edm::Handle<std::vector<float> > els_clustershape_h;
+    iEvent.getByLabel(hltElectronClusterShapeInputTag, els_clustershape_h);
+    for(const auto& iso: *els_clustershape_h) els_clustershape->push_back(iso);
+    edm::Handle<std::vector<float> > els_he_h;
+    iEvent.getByLabel(hltElectronHEInputTag, els_he_h);
+    for(const auto& iso: *els_he_h) els_he->push_back(iso);
+    edm::Handle<std::vector<float> > els_eminusp_h;
+    iEvent.getByLabel(hltElectronEminusPInputTag, els_eminusp_h);
+    for(const auto& iso: *els_eminusp_h) els_eminusp->push_back(iso);
+    edm::Handle<std::vector<float> > els_deta_h;
+    iEvent.getByLabel(hltElectronDEtaInputTag, els_deta_h);
+    for(const auto& iso: *els_deta_h) els_deta->push_back(iso);
+    edm::Handle<std::vector<float> > els_dphi_h;
+    iEvent.getByLabel(hltElectronDPhiInputTag, els_dphi_h);
+    for(const auto& iso: *els_dphi_h) els_dphi->push_back(iso);
   }
 
   if(hltMuonInputString !="unused") {
@@ -499,6 +531,11 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   iEvent.put(els_ecal_iso,  "elsecaliso" );
   iEvent.put(els_hcal_iso,  "elshcaliso" );
   iEvent.put(els_track_iso,  "elstrackiso" );
+  iEvent.put(els_clustershape,  "elsclustershape" );
+  iEvent.put(els_he,  "elshe" );
+  iEvent.put(els_eminusp,  "elseminusp" );
+  iEvent.put(els_deta,  "elsdeta" );
+  iEvent.put(els_dphi,  "elsdphi" );
 
   iEvent.put(ele_pt,   "elept" );
   iEvent.put(ele_eta,  "eleeta" );

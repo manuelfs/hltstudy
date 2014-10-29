@@ -31,6 +31,12 @@ class babymaker : public edm::EDProducer {
   edm::InputTag hltElectronEcalIsoInputTag;
   edm::InputTag hltElectronHcalIsoInputTag;
   edm::InputTag hltElectronTrackIsoInputTag;
+  edm::InputTag hltElectronClusterShapeInputTag;
+  edm::InputTag hltElectronHEInputTag	       ;
+  edm::InputTag hltElectronEminusPInputTag     ;
+  edm::InputTag hltElectronDEtaInputTag	       ;
+  edm::InputTag hltElectronDPhiInputTag	       ;
+
   std::string hltMuonInputString;
   edm::InputTag hltMuonPtInputTag;
   edm::InputTag hltMuonPhiInputTag;

@@ -37,6 +37,33 @@ private:
   edm::EDGetTokenT<reco::RecoEcalCandidateIsolationMap> ecal_map_token_;
   edm::EDGetTokenT<reco::RecoEcalCandidateIsolationMap> hcal_map_token_;
   edm::EDGetTokenT<reco::RecoEcalCandidateIsolationMap> track_map_token_;
+
+  edm::InputTag clustershape_tag_;
+  edm::InputTag clustershape_map_tag_;
+  edm::EDGetTokenT<trigger::TriggerFilterObjectWithRefs> clustershape_token_;
+  edm::EDGetTokenT<reco::RecoEcalCandidateIsolationMap> clustershape_map_token_;
+
+  edm::InputTag he_tag_;
+  edm::InputTag he_map_tag_;
+  edm::EDGetTokenT<trigger::TriggerFilterObjectWithRefs> he_token_;
+  edm::EDGetTokenT<reco::RecoEcalCandidateIsolationMap> he_map_token_;
+
+  edm::InputTag eminusp_tag_;
+  edm::InputTag eminusp_map_tag_;
+  edm::EDGetTokenT<trigger::TriggerFilterObjectWithRefs> eminusp_token_;
+  edm::EDGetTokenT<reco::RecoEcalCandidateIsolationMap> eminusp_map_token_;
+
+  edm::InputTag deta_tag_;
+  edm::InputTag deta_map_tag_;
+  edm::EDGetTokenT<trigger::TriggerFilterObjectWithRefs> deta_token_;
+  edm::EDGetTokenT<reco::RecoEcalCandidateIsolationMap> deta_map_token_;
+
+  edm::InputTag dphi_tag_;
+  edm::InputTag dphi_map_tag_;
+  edm::EDGetTokenT<trigger::TriggerFilterObjectWithRefs> dphi_token_;
+  edm::EDGetTokenT<reco::RecoEcalCandidateIsolationMap> dphi_map_token_;
+
+
 };
 
 void IsoMapLookup(const std::vector<reco::RecoEcalCandidateRef>& ref,
@@ -44,7 +71,8 @@ void IsoMapLookup(const std::vector<reco::RecoEcalCandidateRef>& ref,
 		  std::auto_ptr<std::vector<float> >& iso,
 		  std::auto_ptr<std::vector<float> >& pt,
 		  std::auto_ptr<std::vector<float> >& phi,
-		  std::auto_ptr<std::vector<float> >& eta);
+		  std::auto_ptr<std::vector<float> >& eta, 
+		  bool overE=true, bool useEt=true);
 
 void GetSubset(std::auto_ptr<std::vector<float> >& iso,
 	       std::auto_ptr<std::vector<float> >& temp_iso,
