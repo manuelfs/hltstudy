@@ -24,9 +24,14 @@ namespace baby {
 	const vector<float> &ele_eta() { return hlt.ele_eta(); }
 	const vector<float> &ele_phi() { return hlt.ele_phi(); }
 	const vector<float> &ele_pt() { return hlt.ele_pt(); }
+	const vector<float> &els_clustershape() { return hlt.els_clustershape(); }
+	const vector<float> &els_deta() { return hlt.els_deta(); }
+	const vector<float> &els_dphi() { return hlt.els_dphi(); }
 	const vector<float> &els_ecal_iso() { return hlt.els_ecal_iso(); }
+	const vector<float> &els_eminusp() { return hlt.els_eminusp(); }
 	const vector<float> &els_eta() { return hlt.els_eta(); }
 	const vector<float> &els_hcal_iso() { return hlt.els_hcal_iso(); }
+	const vector<float> &els_he() { return hlt.els_he(); }
 	const vector<float> &els_phi() { return hlt.els_phi(); }
 	const vector<float> &els_pt() { return hlt.els_pt(); }
 	const vector<float> &els_track_iso() { return hlt.els_track_iso(); }

@@ -34,7 +34,7 @@ double deltaphi(double phi1, double phi2);
 float dR(float eta1, float eta2, float phi1, float phi2);
 void ngenleptons(TString filename, vector<int> &nori_genels, vector<int> &nori_genmus, vector<int> genlep_thresh);
 
-void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString subfolder="test",
+void smallntuple(TString folder="/hadoop/cms/store/user/manuelf/HLT/", TString subfolder="test",
 		 TString tagFolders="", int maxfiles=-1){
   gErrorIgnoreLevel=kError; // Turns off "no dictionary for class" warnings
   TString ntupledir = "ntuples/"+subfolder+"/";
@@ -47,6 +47,7 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
   //vector<int_double> sorted; 
   int nels, ngenels, nmus, ngenmus, njets, nbjets, ngenjets;
   vector<double> elspt, elseta, elsphi, genelspt, genelseta, genelsphi;
+  vector<double> elsclustershape, elshe, elseminusp, elsdeta, elsdphi;
   vector<double> muspt, museta, musphi, genmuspt, genmuseta, genmusphi;
   vector<double> musreliso, musgenpt, elsreliso, elstrackiso, elsecaliso, elshcaliso, elsgenpt;
   vector<double> jetspt, jetseta, jetsphi, genjetspt, genjetseta, genjetsphi;
@@ -71,6 +72,11 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
   tree.Branch("els_ecaliso", &elsecaliso);
   tree.Branch("els_hcaliso", &elshcaliso);
   tree.Branch("els_genpt", &elsgenpt);
+  tree.Branch("els_clustershape", &elsclustershape);
+  tree.Branch("els_he", &elshe);
+  tree.Branch("els_eminusp", &elseminusp);
+  tree.Branch("els_deta", &elsdeta);
+  tree.Branch("els_dphi", &elsdphi);
   tree.Branch("genels_pt", &genelspt);
   tree.Branch("genels_eta", &genelseta);
   tree.Branch("genels_phi", &genelsphi);
@@ -173,12 +179,18 @@ void smallntuple(TString folder="/hadoop/cms/store/user/jaehyeok/HLT/", TString 
 	sortlists(ngenmus, &genmuspt, &genmuseta, &genmusphi, genmus_pt(), genmus_eta(), genmus_phi());
 	els_sorted = sortlists(nels, &elspt, &elseta, &elsphi, els_pt(), els_eta(), els_phi());
 	elsreliso.resize(0); elstrackiso.resize(0); elsecaliso.resize(0); elshcaliso.resize(0);
+	elsclustershape.resize(0); elshe.resize(0); elseminusp.resize(0); elsdeta.resize(0); elsdphi.resize(0); 
 	elsgenpt.resize(0); 
 	for(int ilep(0); ilep < nels; ilep++){
 	  elstrackiso.push_back(els_track_iso()[els_sorted[ilep].first]);
 	  elsecaliso.push_back(els_ecal_iso()[els_sorted[ilep].first]);
 	  elshcaliso.push_back(els_hcal_iso()[els_sorted[ilep].first]);
 	  elsreliso.push_back(elstrackiso[ilep]+elsecaliso[ilep]+elshcaliso[ilep]);
+	  elsclustershape.push_back(els_clustershape()[els_sorted[ilep].first]);
+	  elshe.push_back(els_he()[els_sorted[ilep].first]);
+	  elseminusp.push_back(els_eminusp()[els_sorted[ilep].first]);
+	  elsdeta.push_back(els_deta()[els_sorted[ilep].first]);
+	  elsdphi.push_back(els_dphi()[els_sorted[ilep].first]);
 	  float mindr(999.);
 	  int imin(-1);
 	  for(unsigned igen(0); igen < genels_pt().size(); igen++){
@@ -223,27 +235,38 @@ void ngenleptons(TString filename, vector<int> &nori_genels, vector<int> &nori_g
     for(unsigned ind(0); ind<nori_genels.size(); ind++){
       nori_genels[ind] = 0; nori_genmus[ind] = 0;
     }
-    TChain chain("Events");
-    if(filename.Contains("1025_")) chain.Add("ntuples/babies/gen/ntuple_gen_T1tttt_1025.root");
-    else chain.Add("ntuples/babies/gen/ntuple_gen_T1tttt_825.root");
-    hlt_class hltgen;
-    hltgen.Init(&chain);
-    long entries(chain.GetEntries());
-    for(int entry(0); entry<entries; entry++){
-      hltgen.GetEntry(entry);
-      for(unsigned ithresh(0); ithresh<genlep_thresh.size(); ithresh++){
-	for(unsigned lep(0); lep<hltgen.genels_pt().size(); lep++)
-	  if(hltgen.genels_pt()[lep] >= genlep_thresh[ithresh]) {
-	    nori_genels[ithresh]++;
-	    break;
-	  }
-	for(unsigned lep(0); lep<hltgen.genmus_pt().size(); lep++)
-	  if(hltgen.genmus_pt()[lep] >= genlep_thresh[ithresh]) {
-	    nori_genmus[ithresh]++;
-	    break;
-	  }
-      } // Loop over lepton pT thresholds
-    } // Loop over chain entries
+    TString gluinoMass(""), folder("ntuples/babies/gen/");
+    if(filename.Contains("1025_")) gluinoMass = "1025_";
+    else if(filename.Contains("825_")) gluinoMass = "825_";
+    else if(filename.Contains("1500_")) gluinoMass = "1500_";
+    else if(filename.Contains("1200_")) gluinoMass = "1200_";
+    else {cout<<"No gen file for "<<filename<<". Exiting"<<endl; return;}
+
+    vector<TString> rootfiles = dirlist(folder, gluinoMass);
+    int nfiles = static_cast<int>(rootfiles.size());
+    for(int ifile(0); ifile < nfiles; ifile++){
+      TChain chain("Events");
+      TString rootname = folder+"/"+rootfiles[ifile];
+      chain.Add(rootname);
+      hlt_class hltgen;
+      hltgen.Init(&chain);
+      long entries(chain.GetEntries());
+      for(int entry(0); entry<entries; entry++){
+	hltgen.GetEntry(entry);
+	for(unsigned ithresh(0); ithresh<genlep_thresh.size(); ithresh++){
+	  for(unsigned lep(0); lep<hltgen.genels_pt().size(); lep++)
+	    if(hltgen.genels_pt()[lep] >= genlep_thresh[ithresh]) {
+	      nori_genels[ithresh]++;
+	      break;
+	    }
+	  for(unsigned lep(0); lep<hltgen.genmus_pt().size(); lep++)
+	    if(hltgen.genmus_pt()[lep] >= genlep_thresh[ithresh]) {
+	      nori_genmus[ithresh]++;
+	      break;
+	    }
+	} // Loop over lepton pT thresholds
+      } // Loop over chain entries
+    } // Loop over signal files
   } else return;
 }
 

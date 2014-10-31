@@ -5,12 +5,7 @@
 import os, sys
 
 if len(sys.argv)<2: sys.exit('plese specify dataset')
-if len(sys.argv)<3: sys.exit('plese specify Nevt to process')
-if len(sys.argv)<4: sys.exit('plese specify Nevt per job')
-
 dset        = sys.argv[1]
-NevtTotal   = sys.argv[2] 
-NevtJob     = sys.argv[3] 
 
 dsetnew = dset.split('/')[1]+'_'+dset.split('/')[2]
 dsetnew = dsetnew.replace('SIM','')
@@ -20,7 +15,7 @@ dsetnew = dsetnew.replace('/GEN-SIM-RAW','')
 dsetnew = dsetnew.replace('/','_')
 
 
-samples = ['el15vvvl', 'el15noiso']
+samples = ['el15_720elid']
 for sam in samples:
     task = 'jobs/'+dsetnew+'_'+sam
     print('crab -status -c '+task+' >& tmp.log')
@@ -35,16 +30,17 @@ for sam in samples:
         if len(myline)==7:
             if check:
                 if myline[2]=="Done" or myline[1]=="Y":
-                    if myline[4]!="0" or myline[5]!="0": failed.append(myline[0]) 
+                    #if myline[4]!="0" or myline[5]!="0": failed.append(myline[0]) 
+                    if myline[4]!="0" or (myline[5]!="0" and myline[5]!="70500"): failed.append(myline[0]) 
             elif myline[0]=="-----": check=1
         elif len(myline)==0: check = 0
 
-        if len(failed)>0:
-            jlist = ""
-            for job in failed:
-                jlist = jlist+job+','
-            jlist=jlist.rstrip(',')
-            print('crab -forceResubmit '+jlist+' -c '+task)
-            #os.system('crab -forceResubmit '+jlist+' -c '+task)
+    if len(failed)>0:
+        jlist = ""
+        for job in failed:
+            jlist = jlist+job+','
+        jlist=jlist.rstrip(',')
+        print('crab -forceResubmit '+jlist+' -c '+task)
+        os.system('crab -forceResubmit '+jlist+' -c '+task)
 
     os.system('rm tmp.log') 

@@ -89,15 +89,30 @@ protected:
 	vector<float> ele_pt_;
 	TBranch *ele_pt_branch;
 	bool ele_pt_isLoaded;
+	vector<float> els_clustershape_;
+	TBranch *els_clustershape_branch;
+	bool els_clustershape_isLoaded;
+	vector<float> els_deta_;
+	TBranch *els_deta_branch;
+	bool els_deta_isLoaded;
+	vector<float> els_dphi_;
+	TBranch *els_dphi_branch;
+	bool els_dphi_isLoaded;
 	vector<float> els_ecal_iso_;
 	TBranch *els_ecal_iso_branch;
 	bool els_ecal_iso_isLoaded;
+	vector<float> els_eminusp_;
+	TBranch *els_eminusp_branch;
+	bool els_eminusp_isLoaded;
 	vector<float> els_eta_;
 	TBranch *els_eta_branch;
 	bool els_eta_isLoaded;
 	vector<float> els_hcal_iso_;
 	TBranch *els_hcal_iso_branch;
 	bool els_hcal_iso_isLoaded;
+	vector<float> els_he_;
+	TBranch *els_he_branch;
+	bool els_he_isLoaded;
 	vector<float> els_phi_;
 	TBranch *els_phi_branch;
 	bool els_phi_isLoaded;
@@ -330,10 +345,30 @@ void Init(TTree *tree) {
 		ele_pt_branch = tree->GetBranch(tree->GetAlias("ele_pt"));
 		if (ele_pt_branch) {ele_pt_branch->SetAddress(&ele_pt_);}
 	}
+	els_clustershape_branch = 0;
+	if (tree->GetAlias("els_clustershape") != 0) {
+		els_clustershape_branch = tree->GetBranch(tree->GetAlias("els_clustershape"));
+		if (els_clustershape_branch) {els_clustershape_branch->SetAddress(&els_clustershape_);}
+	}
+	els_deta_branch = 0;
+	if (tree->GetAlias("els_deta") != 0) {
+		els_deta_branch = tree->GetBranch(tree->GetAlias("els_deta"));
+		if (els_deta_branch) {els_deta_branch->SetAddress(&els_deta_);}
+	}
+	els_dphi_branch = 0;
+	if (tree->GetAlias("els_dphi") != 0) {
+		els_dphi_branch = tree->GetBranch(tree->GetAlias("els_dphi"));
+		if (els_dphi_branch) {els_dphi_branch->SetAddress(&els_dphi_);}
+	}
 	els_ecal_iso_branch = 0;
 	if (tree->GetAlias("els_ecal_iso") != 0) {
 		els_ecal_iso_branch = tree->GetBranch(tree->GetAlias("els_ecal_iso"));
 		if (els_ecal_iso_branch) {els_ecal_iso_branch->SetAddress(&els_ecal_iso_);}
+	}
+	els_eminusp_branch = 0;
+	if (tree->GetAlias("els_eminusp") != 0) {
+		els_eminusp_branch = tree->GetBranch(tree->GetAlias("els_eminusp"));
+		if (els_eminusp_branch) {els_eminusp_branch->SetAddress(&els_eminusp_);}
 	}
 	els_eta_branch = 0;
 	if (tree->GetAlias("els_eta") != 0) {
@@ -344,6 +379,11 @@ void Init(TTree *tree) {
 	if (tree->GetAlias("els_hcal_iso") != 0) {
 		els_hcal_iso_branch = tree->GetBranch(tree->GetAlias("els_hcal_iso"));
 		if (els_hcal_iso_branch) {els_hcal_iso_branch->SetAddress(&els_hcal_iso_);}
+	}
+	els_he_branch = 0;
+	if (tree->GetAlias("els_he") != 0) {
+		els_he_branch = tree->GetBranch(tree->GetAlias("els_he"));
+		if (els_he_branch) {els_he_branch->SetAddress(&els_he_);}
 	}
 	els_phi_branch = 0;
 	if (tree->GetAlias("els_phi") != 0) {
@@ -564,9 +604,14 @@ void GetEntry(unsigned int idx)
 		ele_eta_isLoaded = false;
 		ele_phi_isLoaded = false;
 		ele_pt_isLoaded = false;
+		els_clustershape_isLoaded = false;
+		els_deta_isLoaded = false;
+		els_dphi_isLoaded = false;
 		els_ecal_iso_isLoaded = false;
+		els_eminusp_isLoaded = false;
 		els_eta_isLoaded = false;
 		els_hcal_iso_isLoaded = false;
+		els_he_isLoaded = false;
 		els_phi_isLoaded = false;
 		els_pt_isLoaded = false;
 		els_track_iso_isLoaded = false;
@@ -633,9 +678,14 @@ void LoadAllBranches()
 	if (ele_eta_branch != 0) ele_eta();
 	if (ele_phi_branch != 0) ele_phi();
 	if (ele_pt_branch != 0) ele_pt();
+	if (els_clustershape_branch != 0) els_clustershape();
+	if (els_deta_branch != 0) els_deta();
+	if (els_dphi_branch != 0) els_dphi();
 	if (els_ecal_iso_branch != 0) els_ecal_iso();
+	if (els_eminusp_branch != 0) els_eminusp();
 	if (els_eta_branch != 0) els_eta();
 	if (els_hcal_iso_branch != 0) els_hcal_iso();
+	if (els_he_branch != 0) els_he();
 	if (els_phi_branch != 0) els_phi();
 	if (els_pt_branch != 0) els_pt();
 	if (els_track_iso_branch != 0) els_track_iso();
@@ -1127,6 +1177,69 @@ void LoadAllBranches()
 		}
 		return ele_pt_;
 	}
+	const vector<float> &els_clustershape()
+	{
+		if (not els_clustershape_isLoaded) {
+			if (els_clustershape_branch != 0) {
+				els_clustershape_branch->GetEntry(index);
+				#ifdef PARANOIA
+				for (vector<float>::const_iterator i = els_clustershape_.begin(); i != els_clustershape_.end(); ++i) {
+					if (not isfinite(*i)) {
+						printf("branch els_clustershape_branch contains a bad float: %f\n", *i);
+						exit(1);
+					}
+				}
+				#endif // #ifdef PARANOIA
+			} else { 
+				printf("branch els_clustershape_branch does not exist!\n");
+				exit(1);
+			}
+			els_clustershape_isLoaded = true;
+		}
+		return els_clustershape_;
+	}
+	const vector<float> &els_deta()
+	{
+		if (not els_deta_isLoaded) {
+			if (els_deta_branch != 0) {
+				els_deta_branch->GetEntry(index);
+				#ifdef PARANOIA
+				for (vector<float>::const_iterator i = els_deta_.begin(); i != els_deta_.end(); ++i) {
+					if (not isfinite(*i)) {
+						printf("branch els_deta_branch contains a bad float: %f\n", *i);
+						exit(1);
+					}
+				}
+				#endif // #ifdef PARANOIA
+			} else { 
+				printf("branch els_deta_branch does not exist!\n");
+				exit(1);
+			}
+			els_deta_isLoaded = true;
+		}
+		return els_deta_;
+	}
+	const vector<float> &els_dphi()
+	{
+		if (not els_dphi_isLoaded) {
+			if (els_dphi_branch != 0) {
+				els_dphi_branch->GetEntry(index);
+				#ifdef PARANOIA
+				for (vector<float>::const_iterator i = els_dphi_.begin(); i != els_dphi_.end(); ++i) {
+					if (not isfinite(*i)) {
+						printf("branch els_dphi_branch contains a bad float: %f\n", *i);
+						exit(1);
+					}
+				}
+				#endif // #ifdef PARANOIA
+			} else { 
+				printf("branch els_dphi_branch does not exist!\n");
+				exit(1);
+			}
+			els_dphi_isLoaded = true;
+		}
+		return els_dphi_;
+	}
 	const vector<float> &els_ecal_iso()
 	{
 		if (not els_ecal_iso_isLoaded) {
@@ -1147,6 +1260,27 @@ void LoadAllBranches()
 			els_ecal_iso_isLoaded = true;
 		}
 		return els_ecal_iso_;
+	}
+	const vector<float> &els_eminusp()
+	{
+		if (not els_eminusp_isLoaded) {
+			if (els_eminusp_branch != 0) {
+				els_eminusp_branch->GetEntry(index);
+				#ifdef PARANOIA
+				for (vector<float>::const_iterator i = els_eminusp_.begin(); i != els_eminusp_.end(); ++i) {
+					if (not isfinite(*i)) {
+						printf("branch els_eminusp_branch contains a bad float: %f\n", *i);
+						exit(1);
+					}
+				}
+				#endif // #ifdef PARANOIA
+			} else { 
+				printf("branch els_eminusp_branch does not exist!\n");
+				exit(1);
+			}
+			els_eminusp_isLoaded = true;
+		}
+		return els_eminusp_;
 	}
 	const vector<float> &els_eta()
 	{
@@ -1189,6 +1323,27 @@ void LoadAllBranches()
 			els_hcal_iso_isLoaded = true;
 		}
 		return els_hcal_iso_;
+	}
+	const vector<float> &els_he()
+	{
+		if (not els_he_isLoaded) {
+			if (els_he_branch != 0) {
+				els_he_branch->GetEntry(index);
+				#ifdef PARANOIA
+				for (vector<float>::const_iterator i = els_he_.begin(); i != els_he_.end(); ++i) {
+					if (not isfinite(*i)) {
+						printf("branch els_he_branch contains a bad float: %f\n", *i);
+						exit(1);
+					}
+				}
+				#endif // #ifdef PARANOIA
+			} else { 
+				printf("branch els_he_branch does not exist!\n");
+				exit(1);
+			}
+			els_he_isLoaded = true;
+		}
+		return els_he_;
 	}
 	const vector<float> &els_phi()
 	{
@@ -1997,9 +2152,14 @@ namespace baby {
 	const vector<float> &ele_eta();
 	const vector<float> &ele_phi();
 	const vector<float> &ele_pt();
+	const vector<float> &els_clustershape();
+	const vector<float> &els_deta();
+	const vector<float> &els_dphi();
 	const vector<float> &els_ecal_iso();
+	const vector<float> &els_eminusp();
 	const vector<float> &els_eta();
 	const vector<float> &els_hcal_iso();
+	const vector<float> &els_he();
 	const vector<float> &els_phi();
 	const vector<float> &els_pt();
 	const vector<float> &els_track_iso();
