@@ -149,6 +149,15 @@ protected:
 	vector<float> genmus_pt_;
 	TBranch *genmus_pt_branch;
 	bool genmus_pt_isLoaded;
+	vector<float> gentop_eta_;
+	TBranch *gentop_eta_branch;
+	bool gentop_eta_isLoaded;
+	vector<float> gentop_phi_;
+	TBranch *gentop_phi_branch;
+	bool gentop_phi_isLoaded;
+	vector<float> gentop_pt_;
+	TBranch *gentop_pt_branch;
+	bool gentop_pt_isLoaded;
 	vector<float> mus_eta_;
 	TBranch *mus_eta_branch;
 	bool mus_eta_isLoaded;
@@ -224,6 +233,12 @@ protected:
 	vector<int> genmus_mom_id_;
 	TBranch *genmus_mom_id_branch;
 	bool genmus_mom_id_isLoaded;
+	vector<int> gentop_id_;
+	TBranch *gentop_id_branch;
+	bool gentop_id_isLoaded;
+	vector<int> gentop_mom_id_;
+	TBranch *gentop_mom_id_branch;
+	bool gentop_mom_id_isLoaded;
 	unsigned int ngenlep_;
 	TBranch *ngenlep_branch;
 	bool ngenlep_isLoaded;
@@ -445,6 +460,21 @@ void Init(TTree *tree) {
 		genmus_pt_branch = tree->GetBranch(tree->GetAlias("genmus_pt"));
 		if (genmus_pt_branch) {genmus_pt_branch->SetAddress(&genmus_pt_);}
 	}
+	gentop_eta_branch = 0;
+	if (tree->GetAlias("gentop_eta") != 0) {
+		gentop_eta_branch = tree->GetBranch(tree->GetAlias("gentop_eta"));
+		if (gentop_eta_branch) {gentop_eta_branch->SetAddress(&gentop_eta_);}
+	}
+	gentop_phi_branch = 0;
+	if (tree->GetAlias("gentop_phi") != 0) {
+		gentop_phi_branch = tree->GetBranch(tree->GetAlias("gentop_phi"));
+		if (gentop_phi_branch) {gentop_phi_branch->SetAddress(&gentop_phi_);}
+	}
+	gentop_pt_branch = 0;
+	if (tree->GetAlias("gentop_pt") != 0) {
+		gentop_pt_branch = tree->GetBranch(tree->GetAlias("gentop_pt"));
+		if (gentop_pt_branch) {gentop_pt_branch->SetAddress(&gentop_pt_);}
+	}
 	mus_eta_branch = 0;
 	if (tree->GetAlias("mus_eta") != 0) {
 		mus_eta_branch = tree->GetBranch(tree->GetAlias("mus_eta"));
@@ -570,6 +600,16 @@ void Init(TTree *tree) {
 		genmus_mom_id_branch = tree->GetBranch(tree->GetAlias("genmus_mom_id"));
 		if (genmus_mom_id_branch) {genmus_mom_id_branch->SetAddress(&genmus_mom_id_);}
 	}
+	gentop_id_branch = 0;
+	if (tree->GetAlias("gentop_id") != 0) {
+		gentop_id_branch = tree->GetBranch(tree->GetAlias("gentop_id"));
+		if (gentop_id_branch) {gentop_id_branch->SetAddress(&gentop_id_);}
+	}
+	gentop_mom_id_branch = 0;
+	if (tree->GetAlias("gentop_mom_id") != 0) {
+		gentop_mom_id_branch = tree->GetBranch(tree->GetAlias("gentop_mom_id"));
+		if (gentop_mom_id_branch) {gentop_mom_id_branch->SetAddress(&gentop_mom_id_);}
+	}
 	ngenlep_branch = 0;
 	if (tree->GetAlias("ngenlep") != 0) {
 		ngenlep_branch = tree->GetBranch(tree->GetAlias("ngenlep"));
@@ -624,6 +664,9 @@ void GetEntry(unsigned int idx)
 		genmus_eta_isLoaded = false;
 		genmus_phi_isLoaded = false;
 		genmus_pt_isLoaded = false;
+		gentop_eta_isLoaded = false;
+		gentop_phi_isLoaded = false;
+		gentop_pt_isLoaded = false;
 		mus_eta_isLoaded = false;
 		mus_iso_isLoaded = false;
 		mus_phi_isLoaded = false;
@@ -649,6 +692,8 @@ void GetEntry(unsigned int idx)
 		genmus_ggmom_id_isLoaded = false;
 		genmus_gmom_id_isLoaded = false;
 		genmus_mom_id_isLoaded = false;
+		gentop_id_isLoaded = false;
+		gentop_mom_id_isLoaded = false;
 		ngenlep_isLoaded = false;
 	}
 
@@ -698,6 +743,9 @@ void LoadAllBranches()
 	if (genmus_eta_branch != 0) genmus_eta();
 	if (genmus_phi_branch != 0) genmus_phi();
 	if (genmus_pt_branch != 0) genmus_pt();
+	if (gentop_eta_branch != 0) gentop_eta();
+	if (gentop_phi_branch != 0) gentop_phi();
+	if (gentop_pt_branch != 0) gentop_pt();
 	if (mus_eta_branch != 0) mus_eta();
 	if (mus_iso_branch != 0) mus_iso();
 	if (mus_phi_branch != 0) mus_phi();
@@ -723,6 +771,8 @@ void LoadAllBranches()
 	if (genmus_ggmom_id_branch != 0) genmus_ggmom_id();
 	if (genmus_gmom_id_branch != 0) genmus_gmom_id();
 	if (genmus_mom_id_branch != 0) genmus_mom_id();
+	if (gentop_id_branch != 0) gentop_id();
+	if (gentop_mom_id_branch != 0) gentop_mom_id();
 	if (ngenlep_branch != 0) ngenlep();
 }
 
@@ -1597,6 +1647,69 @@ void LoadAllBranches()
 		}
 		return genmus_pt_;
 	}
+	const vector<float> &gentop_eta()
+	{
+		if (not gentop_eta_isLoaded) {
+			if (gentop_eta_branch != 0) {
+				gentop_eta_branch->GetEntry(index);
+				#ifdef PARANOIA
+				for (vector<float>::const_iterator i = gentop_eta_.begin(); i != gentop_eta_.end(); ++i) {
+					if (not isfinite(*i)) {
+						printf("branch gentop_eta_branch contains a bad float: %f\n", *i);
+						exit(1);
+					}
+				}
+				#endif // #ifdef PARANOIA
+			} else { 
+				printf("branch gentop_eta_branch does not exist!\n");
+				exit(1);
+			}
+			gentop_eta_isLoaded = true;
+		}
+		return gentop_eta_;
+	}
+	const vector<float> &gentop_phi()
+	{
+		if (not gentop_phi_isLoaded) {
+			if (gentop_phi_branch != 0) {
+				gentop_phi_branch->GetEntry(index);
+				#ifdef PARANOIA
+				for (vector<float>::const_iterator i = gentop_phi_.begin(); i != gentop_phi_.end(); ++i) {
+					if (not isfinite(*i)) {
+						printf("branch gentop_phi_branch contains a bad float: %f\n", *i);
+						exit(1);
+					}
+				}
+				#endif // #ifdef PARANOIA
+			} else { 
+				printf("branch gentop_phi_branch does not exist!\n");
+				exit(1);
+			}
+			gentop_phi_isLoaded = true;
+		}
+		return gentop_phi_;
+	}
+	const vector<float> &gentop_pt()
+	{
+		if (not gentop_pt_isLoaded) {
+			if (gentop_pt_branch != 0) {
+				gentop_pt_branch->GetEntry(index);
+				#ifdef PARANOIA
+				for (vector<float>::const_iterator i = gentop_pt_.begin(); i != gentop_pt_.end(); ++i) {
+					if (not isfinite(*i)) {
+						printf("branch gentop_pt_branch contains a bad float: %f\n", *i);
+						exit(1);
+					}
+				}
+				#endif // #ifdef PARANOIA
+			} else { 
+				printf("branch gentop_pt_branch does not exist!\n");
+				exit(1);
+			}
+			gentop_pt_isLoaded = true;
+		}
+		return gentop_pt_;
+	}
 	const vector<float> &mus_eta()
 	{
 		if (not mus_eta_isLoaded) {
@@ -2086,6 +2199,36 @@ void LoadAllBranches()
 		}
 		return genmus_mom_id_;
 	}
+	const vector<int> &gentop_id()
+	{
+		if (not gentop_id_isLoaded) {
+			if (gentop_id_branch != 0) {
+				gentop_id_branch->GetEntry(index);
+				#ifdef PARANOIA
+				#endif // #ifdef PARANOIA
+			} else { 
+				printf("branch gentop_id_branch does not exist!\n");
+				exit(1);
+			}
+			gentop_id_isLoaded = true;
+		}
+		return gentop_id_;
+	}
+	const vector<int> &gentop_mom_id()
+	{
+		if (not gentop_mom_id_isLoaded) {
+			if (gentop_mom_id_branch != 0) {
+				gentop_mom_id_branch->GetEntry(index);
+				#ifdef PARANOIA
+				#endif // #ifdef PARANOIA
+			} else { 
+				printf("branch gentop_mom_id_branch does not exist!\n");
+				exit(1);
+			}
+			gentop_mom_id_isLoaded = true;
+		}
+		return gentop_mom_id_;
+	}
 	unsigned int &ngenlep()
 	{
 		if (not ngenlep_isLoaded) {
@@ -2172,6 +2315,9 @@ namespace baby {
 	const vector<float> &genmus_eta();
 	const vector<float> &genmus_phi();
 	const vector<float> &genmus_pt();
+	const vector<float> &gentop_eta();
+	const vector<float> &gentop_phi();
+	const vector<float> &gentop_pt();
 	const vector<float> &mus_eta();
 	const vector<float> &mus_iso();
 	const vector<float> &mus_phi();
@@ -2197,6 +2343,8 @@ namespace baby {
 	const vector<int> &genmus_ggmom_id();
 	const vector<int> &genmus_gmom_id();
 	const vector<int> &genmus_mom_id();
+	const vector<int> &gentop_id();
+	const vector<int> &gentop_mom_id();
 	const unsigned int &ngenlep();
 }
 #endif

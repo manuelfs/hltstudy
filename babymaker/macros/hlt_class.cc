@@ -44,6 +44,9 @@ namespace baby {
 	const vector<float> &genmus_eta() { return hlt.genmus_eta(); }
 	const vector<float> &genmus_phi() { return hlt.genmus_phi(); }
 	const vector<float> &genmus_pt() { return hlt.genmus_pt(); }
+	const vector<float> &gentop_eta() { return hlt.gentop_eta(); }
+	const vector<float> &gentop_phi() { return hlt.gentop_phi(); }
+	const vector<float> &gentop_pt() { return hlt.gentop_pt(); }
 	const vector<float> &mus_eta() { return hlt.mus_eta(); }
 	const vector<float> &mus_iso() { return hlt.mus_iso(); }
 	const vector<float> &mus_phi() { return hlt.mus_phi(); }
@@ -69,5 +72,7 @@ namespace baby {
 	const vector<int> &genmus_ggmom_id() { return hlt.genmus_ggmom_id(); }
 	const vector<int> &genmus_gmom_id() { return hlt.genmus_gmom_id(); }
 	const vector<int> &genmus_mom_id() { return hlt.genmus_mom_id(); }
+	const vector<int> &gentop_id() { return hlt.gentop_id(); }
+	const vector<int> &gentop_mom_id() { return hlt.gentop_mom_id(); }
 	const unsigned int &ngenlep() { return hlt.ngenlep(); }
 }

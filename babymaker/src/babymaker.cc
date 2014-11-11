@@ -90,6 +90,12 @@ babymaker::babymaker(const edm::ParameterSet& iConfig) {
   produces<std::vector<int> >   ("genmusgmomid").setBranchAlias("genmus_gmom_id");
   produces<std::vector<int> >   ("genmusggmomid").setBranchAlias("genmus_ggmom_id");
 
+  produces<std::vector<float> > ("gentoppt").setBranchAlias("gentop_pt");
+  produces<std::vector<float> > ("gentopeta").setBranchAlias("gentop_eta");
+  produces<std::vector<float> > ("gentopphi").setBranchAlias("gentop_phi");
+  produces<std::vector<int> >   ("gentopmomid").setBranchAlias("gentop_mom_id");
+  produces<std::vector<int> >   ("gentopid").setBranchAlias("gentop_id");
+
   produces<std::vector<float> > ("recomuspt") .setBranchAlias("reco_mus_pt");
   produces<std::vector<float> > ("recomuseta").setBranchAlias("reco_mus_eta");
   produces<std::vector<float> > ("recomusphi").setBranchAlias("reco_mus_phi");
@@ -216,6 +222,12 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   auto genmus_mom_id   = make_auto(new std::vector<int>);
   auto genmus_gmom_id  = make_auto(new std::vector<int>);
   auto genmus_ggmom_id = make_auto(new std::vector<int>);
+
+  auto gentop_pt       = make_auto(new std::vector<float>);
+  auto gentop_eta      = make_auto(new std::vector<float>);
+  auto gentop_phi      = make_auto(new std::vector<float>);
+  auto gentop_id   = make_auto(new std::vector<int>);
+  auto gentop_mom_id  = make_auto(new std::vector<int>);
 
   auto reco_mus_pt  = make_auto(new std::vector<float>);
   auto reco_mus_eta = make_auto(new std::vector<float>);
@@ -366,22 +378,25 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
   *ngenlep = 0;
   for (auto genp = genparts->cbegin(); genp != genparts->cend(); ++genp ) {
-    if ((genp->status() == 3 || genp->status() == 23) && (abs(genp->pdgId()) == 11 || abs(genp->pdgId()) == 13 || abs(genp->pdgId()) == 15)) (*ngenlep)++;
-        
-    //if (genp->status() != 3 && genp->status() != 23) continue;  
-
     int id = genp->pdgId();
     const reco::Candidate* mom = genp->mother();
     int mom_id = mom ? mom->pdgId() : 0;
+
+    // Saving all daughters of tops, W
+    if( TMath::Abs(mom_id) != 24 && TMath::Abs(mom_id) != 6 ) continue;
+
     const reco::Candidate* gmom = mom ? mom->mother() : nullptr;
     int gmom_id = gmom ? gmom->pdgId() : 0;
     const reco::Candidate* ggmom = gmom ? gmom->mother() : nullptr;
     int ggmom_id = ggmom ? ggmom->pdgId() : 0;
 
-        
-    if( TMath::Abs(id) != 11 && TMath::Abs(id) != 13 ) continue; 
-    if( TMath::Abs(mom_id) != 24 && TMath::Abs(gmom_id) != 24 && TMath::Abs(ggmom_id) != 24 
-	&& genp->status() != 3 && genp->status() != 23 ) continue;
+    if(TMath::Abs(id) < 6) { 
+      gentop_pt  ->push_back(genp->p4().pt());
+      gentop_eta ->push_back(genp->p4().eta());
+      gentop_phi ->push_back(genp->p4().phi());
+      gentop_id->push_back(id);
+      gentop_mom_id->push_back(mom_id);
+    }
         
     if( TMath::Abs(id) == 11 ) {
       genels_pt  ->push_back(genp->p4().pt());
@@ -390,6 +405,7 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
       genels_mom_id->push_back(mom_id);
       genels_gmom_id->push_back(gmom_id);
       genels_ggmom_id->push_back(ggmom_id);
+      (*ngenlep)++;
     }
     if( TMath::Abs(id) == 13 ) {
       genmus_pt  ->push_back(genp->p4().pt());
@@ -398,6 +414,7 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
       genmus_mom_id->push_back(mom_id);
       genmus_gmom_id->push_back(gmom_id);
       genmus_ggmom_id->push_back(ggmom_id);
+      (*ngenlep)++;
     }
   }
 
@@ -567,6 +584,12 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   iEvent.put(genmus_mom_id,   "genmusmomid");
   iEvent.put(genmus_gmom_id,  "genmusgmomid");
   iEvent.put(genmus_ggmom_id, "genmusggmomid");
+
+  iEvent.put(gentop_pt,       "gentoppt" );
+  iEvent.put(gentop_eta,      "gentopeta" );
+  iEvent.put(gentop_phi,      "gentopphi" );
+  iEvent.put(gentop_id,       "gentopid");
+  iEvent.put(gentop_mom_id,   "gentopmomid");
 
   iEvent.put(reco_mus_pt,  "recomuspt");
   iEvent.put(reco_mus_eta, "recomuseta");

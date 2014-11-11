@@ -47,12 +47,12 @@ void smallntuple(TString folder="/hadoop/cms/store/user/manuelf/HLT/", TString s
   //vector<int_double> sorted; 
   int nels, ngenels, nmus, ngenmus, njets, nbjets, ngenjets;
   vector<double> elspt, elseta, elsphi, genelspt, genelseta, genelsphi;
-  vector<double> elsclustershape, elshe, elseminusp, elsdeta, elsdphi;
-  vector<double> muspt, museta, musphi, genmuspt, genmuseta, genmusphi;
+  vector<double> elsclustershape, elshe, elseminusp, elsdeta, elsdphi, elsmindr;
+  vector<double> muspt, museta, musphi, genmuspt, genmuseta, genmusphi, musmindr;
   vector<double> musreliso, musgenpt, elsreliso, elstrackiso, elsecaliso, elshcaliso, elsgenpt;
   vector<double> jetspt, jetseta, jetsphi, genjetspt, genjetseta, genjetsphi;
   vector<double> bjetspt, bjetseta, bjetsphi, bjetscsv;
-  const float luminosity = 19600;
+  const float luminosity = 19600, mindrcut = 0.4;
   TChain chain("Events");
   TTree tree("tree", "tree");
   tree.Branch("onmet", &onmet);
@@ -77,6 +77,7 @@ void smallntuple(TString folder="/hadoop/cms/store/user/manuelf/HLT/", TString s
   tree.Branch("els_eminusp", &elseminusp);
   tree.Branch("els_deta", &elsdeta);
   tree.Branch("els_dphi", &elsdphi);
+  tree.Branch("els_mindr", &elsmindr);
   tree.Branch("genels_pt", &genelspt);
   tree.Branch("genels_eta", &genelseta);
   tree.Branch("genels_phi", &genelsphi);
@@ -85,6 +86,7 @@ void smallntuple(TString folder="/hadoop/cms/store/user/manuelf/HLT/", TString s
   tree.Branch("mus_phi", &musphi);
   tree.Branch("mus_reliso", &musreliso);
   tree.Branch("mus_genpt", &musgenpt);
+  tree.Branch("mus_mindr", &musmindr);
   tree.Branch("genmus_pt", &genmuspt);
   tree.Branch("genmus_eta", &genmuseta);
   tree.Branch("genmus_phi", &genmusphi);
@@ -160,7 +162,7 @@ void smallntuple(TString folder="/hadoop/cms/store/user/manuelf/HLT/", TString s
 
 	// Sort object lists in terms of pt, and save them
 	mus_sorted = sortlists(nmus, &muspt, &museta, &musphi, mus_pt(), mus_eta(), mus_phi());
-	musreliso.resize(0); musgenpt.resize(0); 
+	musreliso.resize(0); musgenpt.resize(0); musmindr.resize(0);
 	for(int ilep(0); ilep < nmus; ilep++){
 	  musreliso.push_back(mus_iso()[mus_sorted[ilep].first]);
 	  float mindr(999.);
@@ -168,19 +170,26 @@ void smallntuple(TString folder="/hadoop/cms/store/user/manuelf/HLT/", TString s
 	  for(unsigned igen(0); igen < genmus_pt().size(); igen++){
 	    if(abs(genmus_mom_id()[igen]) == 24 || abs(genmus_gmom_id()[igen]) == 24 || 
 	       abs(genmus_ggmom_id()[igen]) == 24){
-	      float dr = dR(museta[ilep], genmus_eta()[igen], musphi[ilep], genmus_phi()[igen]);
+	      float dr = abs(dR(museta[ilep], genmus_eta()[igen], musphi[ilep], genmus_phi()[igen]));
 	      float mingenpt = genmus_pt()[igen];
-	      if(dr < mindr && abs((mingenpt-muspt[ilep])/muspt[ilep])<0.5) {mindr = dr; imin = igen;}
+	      if(dr < mindr && dr < mindrcut && abs((mingenpt-muspt[ilep])/muspt[ilep])<0.3) 
+		{mindr = dr; imin = igen;}
 	    }
 	  } // Loop over genmus
 	  if(imin>=0) musgenpt.push_back(genmus_pt()[imin]);
 	  else musgenpt.push_back(-99);
+	  mindr = 999.;
+	  for(unsigned igen(0); igen < gentop_pt().size(); igen++){
+	    float dr = dR(museta[ilep], gentop_eta()[igen], musphi[ilep], gentop_phi()[igen]);
+	    if(dr < mindr) mindr = dr;
+	  }
+	  musmindr.push_back(mindr);
 	}
 	sortlists(ngenmus, &genmuspt, &genmuseta, &genmusphi, genmus_pt(), genmus_eta(), genmus_phi());
 	els_sorted = sortlists(nels, &elspt, &elseta, &elsphi, els_pt(), els_eta(), els_phi());
 	elsreliso.resize(0); elstrackiso.resize(0); elsecaliso.resize(0); elshcaliso.resize(0);
 	elsclustershape.resize(0); elshe.resize(0); elseminusp.resize(0); elsdeta.resize(0); elsdphi.resize(0); 
-	elsgenpt.resize(0); 
+	elsgenpt.resize(0); elsmindr.resize(0);
 	for(int ilep(0); ilep < nels; ilep++){
 	  elstrackiso.push_back(els_track_iso()[els_sorted[ilep].first]);
 	  elsecaliso.push_back(els_ecal_iso()[els_sorted[ilep].first]);
@@ -196,13 +205,20 @@ void smallntuple(TString folder="/hadoop/cms/store/user/manuelf/HLT/", TString s
 	  for(unsigned igen(0); igen < genels_pt().size(); igen++){
 	    if(abs(genels_mom_id()[igen]) == 24 || abs(genels_gmom_id()[igen]) == 24 || 
 	       abs(genels_ggmom_id()[igen]) == 24){
-	      float dr = dR(elseta[ilep], genels_eta()[igen], elsphi[ilep], genels_phi()[igen]);
+	      float dr = abs(dR(elseta[ilep], genels_eta()[igen], elsphi[ilep], genels_phi()[igen]));
 	      float mingenpt = genels_pt()[igen];
-	      if(dr < mindr && abs((mingenpt-elspt[ilep])/elspt[ilep])<0.5) {mindr = dr; imin = igen;}
+	      if(dr < mindr && dr < mindrcut && abs((mingenpt-elspt[ilep])/elspt[ilep])<0.3) 
+		{mindr = dr; imin = igen;}
 	    }
 	  } // Loop over genels
 	  if(imin>=0) elsgenpt.push_back(genels_pt()[imin]);
 	  else elsgenpt.push_back(-99);
+	  mindr = 999.;
+	  for(unsigned igen(0); igen < gentop_pt().size(); igen++){
+	    float dr = dR(elseta[ilep], gentop_eta()[igen], elsphi[ilep], gentop_phi()[igen]);
+	    if(dr < mindr) mindr = dr;
+	  }
+	  elsmindr.push_back(mindr);
 	}
 
 	sortlists(ngenels, &genelspt, &genelseta, &genelsphi, genels_pt(), genels_eta(), genels_phi());
@@ -236,8 +252,8 @@ void ngenleptons(TString filename, vector<int> &nori_genels, vector<int> &nori_g
       nori_genels[ind] = 0; nori_genmus[ind] = 0;
     }
     TString gluinoMass(""), folder("ntuples/babies/gen/");
-    if(filename.Contains("1025_")) gluinoMass = "1025_";
-    else if(filename.Contains("825_")) gluinoMass = "825_";
+    if(filename.Contains("1025_")) gluinoMass = "1025";
+    else if(filename.Contains("825_")) gluinoMass = "825";
     else if(filename.Contains("1500_")) gluinoMass = "1500_";
     else if(filename.Contains("1200_")) gluinoMass = "1200_";
     else {cout<<"No gen file for "<<filename<<". Exiting"<<endl; return;}
