@@ -329,8 +329,17 @@ for line in lines:
     elif line.find('CMSSW version specific customizations') != -1:
         if args.timing and not found_timer_service:
             WriteTimingOutput(intermediate_file)
+    elif line.find('customiseGlobalTag(') != -1:
+        line = "    process.GlobalTag = customiseGlobalTag(process.GlobalTag, globaltag = 'MCRUN2_72_V3A',conditions='TrackerAlignmentExtendedError_2011Realistic_v1_mc,TrackerAlignmentErrorExtendedRcd,frontier://FrontierProd/CMS_CONDITIONS+MuonDTAPEObjectsExtended_v0_mc,DTAlignmentErrorExtendedRcd,frontier://FrontierProd/CMS_CONDITIONS+MuonCSCAPEObjectsExtended_v0_mc,CSCAlignmentErrorExtendedRcd,frontier://FrontierProd/CMS_CONDITIONS+EcalSamplesCorrelation_mc,EcalSamplesCorrelationRcd,frontier://FrontierProd/CMS_CONDITIONS+EcalPulseShapes_mc,EcalPulseShapesRcd,frontier://FrontierProd/CMS_CONDITIONS+EcalPulseCovariances_mc,EcalPulseCovariancesRcd,frontier://FrontierProd/CMS_CONDITIONS')\n"
 
     intermediate_file.write(line)
+
+intermediate_file.write("if hasattr(process, 'hltCsc2DRecHits'):\n")
+intermediate_file.write('    process.hltCsc2DRecHits.wireDigiTag  = cms.InputTag("simMuonCSCDigis","MuonCSCWireDigi")\n')
+intermediate_file.write('    process.hltCsc2DRecHits.stripDigiTag = cms.InputTag("simMuonCSCDigis","MuonCSCStripDigi")\n')
+intermediate_file.write("if hasattr(process, 'cscReEmulTriggerPrimitiveDigis'):\n")
+intermediate_file.write('    process.cscReEmulTriggerPrimitiveDigis.CSCComparatorDigiProducer = cms.InputTag("simMuonCSCDigis","MuonCSCComparatorDigi")\n')
+intermediate_file.write('    process.cscReEmulTriggerPrimitiveDigis.CSCWireDigiProducer = cms.InputTag("simMuonCSCDigis","MuonCSCWireDigi")\n')
 
 if args.timing:
     intermediate_file.write("process.DQMStore = cms.Service('DQMStore')\n")

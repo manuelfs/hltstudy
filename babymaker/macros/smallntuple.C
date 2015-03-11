@@ -52,6 +52,7 @@ void smallntuple(TString folder="/hadoop/cms/store/user/manuelf/HLT/", TString s
   vector<double> musreliso, musgenpt, elsreliso, elstrackiso, elsecaliso, elshcaliso, elsgenpt;
   vector<double> jetspt, jetseta, jetsphi, genjetspt, genjetseta, genjetsphi;
   vector<double> bjetspt, bjetseta, bjetsphi, bjetscsv;
+  bool not_pu;
   const float luminosity = 19600, mindrcut = 0.4;
   TChain chain("Events");
   TTree tree("tree", "tree");
@@ -107,6 +108,7 @@ void smallntuple(TString folder="/hadoop/cms/store/user/manuelf/HLT/", TString s
   tree.Branch("njets", &njets);
   tree.Branch("nbjets", &nbjets);
   tree.Branch("ngenjets", &ngenjets);
+  tree.Branch("not_pu", &not_pu);
 
   genlep_thresh.push_back(0); genlep_thresh.push_back(10); 
   genlep_thresh.push_back(15); genlep_thresh.push_back(17); 
@@ -156,6 +158,12 @@ void smallntuple(TString folder="/hadoop/cms/store/user/manuelf/HLT/", TString s
 	onmet = met_pt();
 	onmet_phi = met_phi();
 	genht = 0;
+	// If the leading jet is not matched to the leading genjet the event is likely to be PU
+	// https://indico.cern.ch/event/351559/contribution/4/material/slides/0.pdf
+	if(genjets_eta().size()>0 && pfjets_eta().size()>0)
+	  not_pu = (sqrt(pow(genjets_eta().at(0)-pfjets_eta().at(0),2)+
+			 pow(genjets_phi().at(0)-pfjets_phi().at(0),2)) < 0.1);
+	else not_pu = false;
 	for(unsigned ijet(0); ijet < genjets_pt().size(); ijet++)
 	  if(genjets_pt().at(ijet)>40 && genjets_eta().at(ijet)<3) genht += genjets_pt().at(ijet);
 	genmet = gen_met();

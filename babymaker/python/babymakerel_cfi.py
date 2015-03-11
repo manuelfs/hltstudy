@@ -15,5 +15,5 @@ babymaker = cms.EDProducer(
     recoPfMetInputTag_      = cms.InputTag("unused"),
     recoGenJetsInputTag_    = cms.InputTag("unused"),
     m_Jets_                 = cms.InputTag("hltSelector4CentralJetsL1FastJet"),
-    m_JetTags_              = cms.InputTag("hltL3CombinedSecondaryVertexBJetTags")
+    m_JetTags_              = cms.InputTag("hltCombinedSecondaryVertexBJetTagsCalo")
 )
