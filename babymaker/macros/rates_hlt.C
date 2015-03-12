@@ -1,0 +1,193 @@
+// rates_hlt.C: Compares HLT rates of lepton pt, HT, and MET cuts
+
+#define INT_ROOT
+#include "styles.hpp"
+#include "styles.cpp"
+#include "ucsb_utils.hpp"
+#include "ucsb_utils.cpp"
+
+
+#include <vector>
+#include <fstream>
+#include <iostream>
+#include <cmath>
+#include <string>
+#include <sstream>
+#include <ctime>
+#include "TChain.h"
+#include "TFile.h"
+#include "TLine.h"
+#include "TArrow.h"
+#include "TStyle.h"
+#include "TCanvas.h"
+#include "TLegend.h"
+#include "TString.h"
+#include "TH1D.h"
+#include "TH2D.h"
+#include "TMath.h"
+
+#define NCuts 1
+
+using namespace std;
+using std::cout;
+using std::endl;
+
+void ReadChains(vector<TChain*> &chain, vector<int> &entries, TString folder, vector<TString> filenames);
+
+void rates_hlt(TString isocut = "0.4", TString folder="root/15-03-11/el15/", bool applyCSV=false){
+  styles style("2Dtitle"); style.setDefaultStyle(); gStyle->SetPaintTextFormat("4.1f");
+  gStyle->SetHatchesLineWidth(2);
+  TCanvas can;
+  bool isEl = folder.Contains("el15")?true:false;
+
+  //Files
+  vector<TString> filenames, Htag;
+  filenames.push_back("/*QCD*");	        Htag.push_back("QCD");
+  filenames.push_back("/*TT*");		        Htag.push_back("tt");
+  filenames.push_back("/W*");                   Htag.push_back("Wjets");
+  filenames.push_back("/*T1tttt*1500_*PU20*");  Htag.push_back("sig1500");
+  filenames.push_back("/*T1tttt*1025_*");       Htag.push_back("sig1025");
+  filenames.push_back("/*T1tttt*1200_*PU20*");  Htag.push_back("sig1200");
+  Htag.push_back("Total");
+  vector<TChain*> chain;
+  vector<int> noriginal;
+  ReadChains(chain, noriginal, folder, filenames);
+  vector<int> indchain;
+  indchain.push_back(0);
+  indchain.push_back(1);
+  indchain.push_back(2);
+  indchain.push_back(3);
+  indchain.push_back(6);
+  const int NSam = indchain.size();
+
+  // Histograms
+  TString Hname, totCut, Pnamebase, Pname, Title;
+  TString xTitle = "Minimum HLT PF H_{T} (GeV)";
+  TString yTitle = "Minimum HLT PF E_{T,miss} (GeV)";
+  TString zTitle = "HLT rate (Hz)";
+  TH2D *hRate[2][NCuts][20];
+
+  // Cuts
+  TString Cuts[] = {"Max$(mus_pt*((mus_reliso)<isocut))>15&&not_pu"};
+  TString TitleCuts[] = {", RelIso_{R=0.2} < isocut"};
+  if(isEl)
+    Cuts[0] = "Max$(els_pt*((els_trackiso+els_hcaliso+els_ecaliso)<isocut))>15&&not_pu";
+  if(applyCSV){
+    Cuts[0] += "&&Max$(bjets_csv*(bjets_pt>40))>0.7";
+    TitleCuts[0] += ", 1 b-tag";
+  }
+  Cuts[0].ReplaceAll("isocut",isocut);
+  TitleCuts[0].ReplaceAll("isocut",isocut);
+  isocut.ReplaceAll(".","p");
+
+  TString Tags[] = {(isEl?"el_":"mu_")+isocut+(applyCSV?"_btag":"")};
+
+  TString tagfolder = folder;
+  if(tagfolder[tagfolder.Sizeof()-2] == '/') tagfolder.Remove(tagfolder.Sizeof()-2);
+  tagfolder.Remove(0,tagfolder.Last('/')+1);
+
+  int nBinsHt = 14, nBinsMet = 14;
+  float minHt=200, maxHt=900, minMet=0, maxMet=140;
+
+  for(int icut(0); icut < NCuts; icut++){
+    totCut = "1.4e-2/19600*weight*(" + Cuts[icut] + ")";
+
+    Title = "p_{T}^{#mu} > 15 GeV"+TitleCuts[icut];
+    if(isEl) {
+      Title.ReplaceAll("#mu","e");
+    }
+    cout<<endl<<"Doing cuts "<<totCut<<endl;
+    for(int sam(0); sam < NSam; sam++){
+      for(int his(1); his >= 0; his--) {
+	Hname = Htag[indchain[sam]]; Hname += icut; Hname += his;
+	hRate[his][icut][sam] = new TH2D(Hname,Title+"       L = 1.4 #times 10^{34} cm^{-2}s^{-1}",
+					 nBinsHt, minHt, maxHt, nBinsMet, minMet, maxMet);
+      }
+      hRate[0][icut][sam]->SetXTitle(xTitle);
+      hRate[0][icut][sam]->SetYTitle(yTitle);
+      hRate[0][icut][sam]->SetZTitle(Htag[indchain[sam]]+" "+zTitle);
+      hRate[1][icut][sam]->SetMarkerStyle(20);
+
+      TString actualCuts(totCut);
+      if(Htag[indchain[sam]].Contains("sig")) {
+	hRate[0][icut][sam]->SetTitle(Title);
+	actualCuts.ReplaceAll("1.4e-2/19600*weight*(","wl1ht200*(Max$(genmus_pt)>0&&");
+	if(isEl) actualCuts.ReplaceAll("genmus", "genels");
+	hRate[1][icut][sam]->SetMarkerSize(2.2);
+      } else hRate[1][icut][sam]->SetMarkerSize(2.5);
+      if(Htag[indchain[sam]]=="sig1025") hRate[0][icut][sam]->SetZTitle("T1tttt(1025,625) efficiency (%)");	
+      if(Htag[indchain[sam]]=="sig1200") hRate[0][icut][sam]->SetZTitle("T1tttt(1200,800) efficiency (%)");	
+      if(Htag[indchain[sam]]=="sig1500") hRate[0][icut][sam]->SetZTitle("T1tttt(1500,100) efficiency (%)");
+
+      
+      // Projecting chain
+      if(Htag[indchain[sam]]!="Total") {
+	chain[indchain[sam]]->Project(Hname, "abs(onmet):onht", actualCuts);
+      } else hRate[0][icut][sam]->SetZTitle("HLT rate [QCD + tt + W#rightarrowl#nu] (Hz)");
+    }
+
+    // Finding yields for different cuts
+    unsigned int iht(0); int itag(3);
+    for(int htbin(1); htbin <= nBinsHt; htbin++){
+      for(int metbin(1); metbin <= nBinsMet; metbin++){
+    	float bkgrate(0), rate;
+    	for(int sam(0); sam < NSam-1; sam++){
+    	  rate = hRate[0][icut][sam]->Integral(htbin, nBinsHt+1, metbin, nBinsMet+1);
+    	  if(!Htag[indchain[sam]].Contains("sig")) bkgrate += rate;
+    	  else rate *= (100./(double)noriginal[indchain[sam]]);
+    	  for(int his(0); his < 2; his++) 
+    	    hRate[his][icut][sam]->SetBinContent(htbin, metbin, rate);
+    	}
+    	for(int his(0); his < 2; his++) 
+    	  hRate[his][icut][NSam-1]->SetBinContent(htbin, metbin, bkgrate);
+      } // Loop over MET bins
+    } // Loop over HT bins
+
+    // Plotting rates and efficiencies
+    Pnamebase = "plots//rate2d_"+Tags[icut]+ ".eps";
+    for(int sam(0); sam < NSam; sam++){
+      Pname = Pnamebase; 
+      if(Htag[indchain[sam]].Contains("sig")) {
+    	Pname.ReplaceAll("rate2d", Htag[indchain[sam]]+"effi2d");
+    	can.SetLogz(0);
+      } else {
+    	//hRate[0][icut][sam]->SetMinimum(hRate[0][icut][2]->GetMinimum());
+    	//hRate[0][icut][sam]->SetMaximum(2*hRate[0][icut][NSam]->GetMaximum());
+    	Pname.ReplaceAll("rate2d", Htag[indchain[sam]]+"rate2d");
+    	can.SetLogz(1);
+      }
+      hRate[0][icut][sam]->Draw("colz");
+      hRate[1][icut][sam]->Draw("text same");
+      can.SaveAs(Pname);
+    }
+  } // Loop over cuts
+
+  for(int icut(0); icut < NCuts; icut++){
+    for(int tag(0); tag < NSam; tag++){
+      for(int his(0); his < 2; his++)
+  	if(hRate[his][icut][tag]) delete hRate[his][icut][tag];
+    }
+  }
+}
+
+
+void ReadChains(vector<TChain*> &chain, vector<int> &entries, TString folder, vector<TString> FileNames){
+
+  bool isEl = folder.Contains("el15")?true:false;
+  for(unsigned sam(0); sam < FileNames.size(); sam++){
+    chain.push_back(new TChain("tree"));
+    chain[sam]->Add(folder+FileNames[sam]);
+    if(FileNames[sam].Contains("T1tttt")) {
+      int noriginal, nori_genmu0, nori_genel0;
+      TChain tglobal("treeglobal");
+      tglobal.Add(folder+FileNames[sam]);
+      tglobal.SetBranchAddress("noriginal",&noriginal);
+      tglobal.SetBranchAddress("nori_genel0",&nori_genel0);
+      tglobal.SetBranchAddress("nori_genmu0",&nori_genmu0);
+      tglobal.GetEntry(0);
+
+      if(isEl) entries.push_back(nori_genel0);
+      else entries.push_back(nori_genmu0);
+    } else entries.push_back(0);
+  }// Loop over samples
+}
