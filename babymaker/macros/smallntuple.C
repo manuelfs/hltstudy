@@ -129,6 +129,7 @@ void smallntuple(TString folder="/hadoop/cms/store/user/manuelf/HLT/", TString s
   vector<TString> dirs = dirlist(folder, "dir", tagFolders);
   for(unsigned idir(0); idir < dirs.size(); idir++){
     sampledir = folder+"/"+dirs[idir];
+    //if(sampledir.Contains("QCD")) continue;
     chain.Add(sampledir+"/*.root");
     totentries = chain.GetEntries();
     int totentry(0);
@@ -158,12 +159,17 @@ void smallntuple(TString folder="/hadoop/cms/store/user/manuelf/HLT/", TString s
 	onmet = met_pt();
 	onmet_phi = met_phi();
 	genht = 0;
-	// If the leading jet is not matched to the leading genjet the event is likely to be PU
+	// If the leading jet is not matched to the any genjet, the event is likely to be PU
 	// https://indico.cern.ch/event/351559/contribution/4/material/slides/0.pdf
-	if(genjets_eta().size()>0 && pfjets_eta().size()>0)
-	  not_pu = (sqrt(pow(genjets_eta().at(0)-pfjets_eta().at(0),2)+
-			 pow(genjets_phi().at(0)-pfjets_phi().at(0),2)) < 0.1);
-	else not_pu = false;
+	not_pu = false;
+	if(pfjets_eta().size()>0){
+	  for(unsigned ijet(0); ijet < genjets_pt().size(); ijet++){
+	    if(dR(genjets_eta().at(ijet),pfjets_eta().at(0), genjets_phi().at(ijet),pfjets_phi().at(0)) < 0.5){
+	      not_pu = true;
+	      break;
+	    }
+	  } // Loop over genjets
+	}
 	for(unsigned ijet(0); ijet < genjets_pt().size(); ijet++)
 	  if(genjets_pt().at(ijet)>40 && genjets_eta().at(ijet)<3) genht += genjets_pt().at(ijet);
 	genmet = gen_met();

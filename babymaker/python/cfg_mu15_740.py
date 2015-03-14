@@ -1,4 +1,4 @@
-# /users/manuelf/CMSSW_7_4_X/ForBabies/V3 (CMSSW_7_4_0_pre7_HLT1)
+# /users/manuelf/CMSSW_7_4_X/ForBabies/V6 (CMSSW_7_4_0_pre7_HLT1)
 
 import FWCore.ParameterSet.Config as cms
 
@@ -10,7 +10,7 @@ process.load('hltstudy.babymaker.IsoElectronProducer_cfi')
 process.load('hltstudy.babymaker.babymakermu_cfi')
 
 process.HLTConfigVersion = cms.PSet(
-  tableName = cms.string('/users/manuelf/CMSSW_7_4_X/ForBabies/V3')
+  tableName = cms.string('/users/manuelf/CMSSW_7_4_X/ForBabies/V6')
 )
 
 process.hltGtDigis = cms.EDProducer( "L1GlobalTriggerRawToDigi",
@@ -115,6 +115,10 @@ process.hltL1sL1HTT150ORHTT175 = cms.EDFilter( "HLTLevel1GTSeed",
     L1GtObjectMapTag = cms.InputTag( "hltL1GtObjectMap" ),
     L1TechTriggerSeeding = cms.bool( False )
 )
+process.hltPreEle15IsoVVVLBTagtop8CSVPFHTPFMET = cms.EDFilter( "HLTPrescaler",
+    L1GtReadoutRecordTag = cms.InputTag( "hltGtDigis" ),
+    offset = cms.uint32( 0 )
+)
 process.hltL1sL1SingleEG5 = cms.EDFilter( "HLTLevel1GTSeed",
     L1SeedsLogicalExpression = cms.string( "L1_SingleEG5" ),
     saveTags = cms.bool( True ),
@@ -126,10 +130,6 @@ process.hltL1sL1SingleEG5 = cms.EDFilter( "HLTLevel1GTSeed",
     L1NrBxInEvent = cms.int32( 3 ),
     L1GtObjectMapTag = cms.InputTag( "hltL1GtObjectMap" ),
     L1TechTriggerSeeding = cms.bool( False )
-)
-process.hltPreEle15IsoVVVLBTagtop8CSVPFHTPFMET = cms.EDFilter( "HLTPrescaler",
-    L1GtReadoutRecordTag = cms.InputTag( "hltGtDigis" ),
-    offset = cms.uint32( 0 )
 )
 process.hltEcalDigis = cms.EDProducer( "EcalRawToDigi",
     orderedDCCIdList = cms.vint32( 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54 ),
@@ -2298,16 +2298,16 @@ process.hltEle15VVVLHEFilter = cms.EDFilter( "HLTEgammaGenericFilter",
 )
 process.hltEgammaEcalPFClusterIso = cms.EDProducer( "EgammaHLTEcalPFClusterIsolationProducer",
     energyEndcap = cms.double( 0.0 ),
-    effectiveAreaBarrel = cms.double( 0.149 ),
+    effectiveAreaBarrel = cms.double( 0.066 ),
     etaStripBarrel = cms.double( 0.0 ),
     rhoProducer = cms.InputTag( "hltFixedGridRhoFastjetAllCaloForMuons" ),
     pfClusterProducer = cms.InputTag( "hltParticleFlowClusterECALL1Seeded" ),
     etaStripEndcap = cms.double( 0.0 ),
     drVetoBarrel = cms.double( 0.0 ),
-    drMax = cms.double( 0.3 ),
+    drMax = cms.double( 0.2 ),
     doRhoCorrection = cms.bool( True ),
     energyBarrel = cms.double( 0.0 ),
-    effectiveAreaEndcap = cms.double( 0.097 ),
+    effectiveAreaEndcap = cms.double( 0.043 ),
     drVetoEndcap = cms.double( 0.0 ),
     recoEcalCandidateProducer = cms.InputTag( "hltEgammaCandidates" ),
     rhoMax = cms.double( 9.9999999E7 ),
@@ -2447,17 +2447,17 @@ process.hltParticleFlowClusterHCALForEgamma = cms.EDProducer( "PFClusterProducer
 process.hltEgammaHcalPFClusterIso = cms.EDProducer( "EgammaHLTHcalPFClusterIsolationProducer",
     energyEndcap = cms.double( 0.0 ),
     useHF = cms.bool( False ),
-    effectiveAreaBarrel = cms.double( 0.06 ),
+    effectiveAreaBarrel = cms.double( 0.027 ),
     etaStripBarrel = cms.double( 0.0 ),
     pfClusterProducerHFHAD = cms.InputTag( "hltParticleFlowClusterHFHADForEgamma" ),
     rhoProducer = cms.InputTag( "hltFixedGridRhoFastjetAllCaloForMuons" ),
     etaStripEndcap = cms.double( 0.0 ),
     drVetoBarrel = cms.double( 0.0 ),
     pfClusterProducerHCAL = cms.InputTag( "hltParticleFlowClusterHCALForEgamma" ),
-    drMax = cms.double( 0.3 ),
+    drMax = cms.double( 0.2 ),
     doRhoCorrection = cms.bool( True ),
     energyBarrel = cms.double( 0.0 ),
-    effectiveAreaEndcap = cms.double( 0.089 ),
+    effectiveAreaEndcap = cms.double( 0.04 ),
     drVetoEndcap = cms.double( 0.0 ),
     recoEcalCandidateProducer = cms.InputTag( "hltEgammaCandidates" ),
     rhoMax = cms.double( 9.9999999E7 ),
@@ -3433,7 +3433,7 @@ process.hltEgammaEleGsfTrackIso = cms.EDProducer( "EgammaHLTElectronTrackIsolati
     trackProducer = cms.InputTag( "hltIter2MergedForElectrons" ),
     egTrkIsoStripBarrel = cms.double( 0.03 ),
     electronProducer = cms.InputTag( "hltEgammaGsfElectrons" ),
-    egTrkIsoConeSize = cms.double( 0.3 ),
+    egTrkIsoConeSize = cms.double( 0.2 ),
     egTrkIsoRSpan = cms.double( 999999.0 ),
     egTrkIsoVetoConeSizeEndcap = cms.double( 0.03 ),
     recoEcalCandidateProducer = cms.InputTag( "hltEgammaCandidates" ),
@@ -6756,21 +6756,21 @@ process.hltPFMETProducer = cms.EDProducer( "HLTMhtProducer",
 process.hltBoolEnd = cms.EDFilter( "HLTBool",
     result = cms.bool( True )
 )
+process.hltPreMu15IsoVVVLBTagCSVPFHTPFMET = cms.EDFilter( "HLTPrescaler",
+    L1GtReadoutRecordTag = cms.InputTag( "hltGtDigis" ),
+    offset = cms.uint32( 0 )
+)
 process.hltL1sL1SingleMu5 = cms.EDFilter( "HLTLevel1GTSeed",
     L1SeedsLogicalExpression = cms.string( "L1_SingleMu5" ),
     saveTags = cms.bool( True ),
     L1MuonCollectionTag = cms.InputTag( "hltL1extraParticles" ),
-    L1UseL1TriggerObjectMaps = cms.bool( True ),
+    L1UseL1TriggerObjectMaps = cms.bool( False ),
     L1UseAliasesForSeeding = cms.bool( True ),
     L1GtReadoutRecordTag = cms.InputTag( "hltGtDigis" ),
     L1CollectionsTag = cms.InputTag( "hltL1extraParticles" ),
     L1NrBxInEvent = cms.int32( 3 ),
     L1GtObjectMapTag = cms.InputTag( "hltL1GtObjectMap" ),
     L1TechTriggerSeeding = cms.bool( False )
-)
-process.hltPreMu15IsoVVVLBTagCSVPFHTPFMET = cms.EDFilter( "HLTPrescaler",
-    L1GtReadoutRecordTag = cms.InputTag( "hltGtDigis" ),
-    offset = cms.uint32( 0 )
 )
 process.hltL1fL1sMu5L1Filtered0 = cms.EDFilter( "HLTMuonL1Filter",
     saveTags = cms.bool( False ),
@@ -7778,21 +7778,15 @@ process.out.outputCommands = cms.untracked.vstring( 'drop *' ) ##
 process.out.outputCommands.extend(cms.untracked.vstring('keep *_*babymaker*_*_*')) ##
 
 process.SeqHLTriggerFinalPath = cms.Sequence( process.hltGtDigis + process.hltScalersRawToDigi + process.hltFEDSelector + process.hltTriggerSummaryAOD + process.hltTriggerSummaryRAW )
-process.SeqHLT_Ele15_IsoVVVL_BTagtop8CSV_PFHT_PFMET_v1 = cms.Sequence( process.HLTBeginSequence + process.hltL1sL1HTT150ORHTT175 + cms.ignore(process.hltL1sL1SingleEG5) + process.hltPreEle15IsoVVVLBTagtop8CSVPFHTPFMET + process.HLTAK4CaloJetsSequence + process.hltHtMht + process.hltHt200 + process.hltSusyPreBtagJetFilter + process.HLTFastPrimaryVertexSequence + process.hltFastPVPixelVertexSelector + process.HLTBtagCSVSequenceL3 + process.HLTEle15VVVLGsfSequence + process.HLTAK4PFJetsSequence + process.hltPFHT + process.hltPFMETProducer + process.antiktGenJets + process.HLTEndSequence )
-process.SeqHLT_Mu15_IsoVVVL_BTagCSV_PFHT_PFMET_v1 = cms.Sequence( process.HLTBeginSequence + process.hltL1sL1HTT150ORHTT175 + cms.ignore(process.hltL1sL1SingleMu5) + process.hltPreMu15IsoVVVLBTagCSVPFHTPFMET + process.HLTAK4CaloJetsSequence + process.hltHtMht + process.hltHt200 + process.hltSusyPreBtagJetFilter + process.HLTFastPrimaryVertexSequence + process.hltFastPVPixelVertexSelector + process.HLTBtagCSVSequenceL3 + process.hltL1fL1sMu5L1Filtered0 + process.HLTL2muonrecoSequence + process.hltL2fL1sMu5L1f0L2Filtered0Q + process.HLTL3muonrecoSequence + process.hltL3fL1sMu5L1f0L2f3QL3Filtered15Q + process.HLTMuVVVLCombinedIsolationSequence + process.hltL3MuVVVLIsoFIlter + process.HLTAK4PFJetsSequence + process.hltPFHT + process.hltPFMETProducer + process.antiktGenJets + process.HLTEndSequence )
+process.SeqHLT_Ele15_IsoVVVL_BTagtop8CSV_PFHT_PFMET_v1 = cms.Sequence( process.HLTBeginSequence + process.hltL1sL1HTT150ORHTT175 + process.hltPreEle15IsoVVVLBTagtop8CSVPFHTPFMET + cms.ignore(process.hltL1sL1SingleEG5) + process.HLTAK4CaloJetsSequence + process.hltHtMht + process.hltHt200 + process.hltSusyPreBtagJetFilter + process.HLTFastPrimaryVertexSequence + process.hltFastPVPixelVertexSelector + process.HLTBtagCSVSequenceL3 + process.HLTEle15VVVLGsfSequence + process.HLTAK4PFJetsSequence + process.hltPFHT + process.hltPFMETProducer + process.antiktGenJets + process.HLTEndSequence )
+process.SeqHLT_Mu15_IsoVVVL_BTagCSV_PFHT_PFMET_v1 = cms.Sequence( process.HLTBeginSequence + process.hltL1sL1HTT150ORHTT175 + process.hltPreMu15IsoVVVLBTagCSVPFHTPFMET + cms.ignore(process.hltL1sL1SingleMu5) + process.HLTAK4CaloJetsSequence + process.hltHtMht + process.hltHt200 + process.hltSusyPreBtagJetFilter + process.HLTFastPrimaryVertexSequence + process.hltFastPVPixelVertexSelector + process.HLTBtagCSVSequenceL3 + process.hltL1fL1sMu5L1Filtered0 + process.HLTL2muonrecoSequence + process.hltL2fL1sMu5L1f0L2Filtered0Q + process.HLTL3muonrecoSequence + process.hltL3fL1sMu5L1f0L2f3QL3Filtered15Q + process.HLTMuVVVLCombinedIsolationSequence + process.hltL3MuVVVLIsoFIlter + process.HLTAK4PFJetsSequence + process.hltPFHT + process.hltPFMETProducer + process.antiktGenJets + process.HLTEndSequence )
 process.SeqHLTriggerFirstPath = cms.Sequence( process.hltGetConditions + process.hltGetRaw + process.hltBoolFalse )
 
 process.HLT_Mu15_IsoVVVL_BTagCSV_PFHT_PFMET_v1 = cms.Path( process.SeqHLT_Mu15_IsoVVVL_BTagCSV_PFHT_PFMET_v1 + process.IsoMuonProducer + process.babymaker )
 # override the GlobalTag, connection string and pfnPrefix
 if 'GlobalTag' in process.__dict__:
-
-    # From https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideGlobalHLT#Running_the_HLT_with_CMSSW_7_4_X
     from Configuration.AlCa.GlobalTag_condDBv2 import GlobalTag as customiseGlobalTag
     process.GlobalTag = customiseGlobalTag(process.GlobalTag, globaltag = 'MCRUN2_72_V3A',conditions='TrackerAlignmentExtendedError_2011Realistic_v1_mc,TrackerAlignmentErrorExtendedRcd,frontier://FrontierProd/CMS_CONDITIONS+MuonDTAPEObjectsExtended_v0_mc,DTAlignmentErrorExtendedRcd,frontier://FrontierProd/CMS_CONDITIONS+MuonCSCAPEObjectsExtended_v0_mc,CSCAlignmentErrorExtendedRcd,frontier://FrontierProd/CMS_CONDITIONS+EcalSamplesCorrelation_mc,EcalSamplesCorrelationRcd,frontier://FrontierProd/CMS_CONDITIONS+EcalPulseShapes_mc,EcalPulseShapesRcd,frontier://FrontierProd/CMS_CONDITIONS+EcalPulseCovariances_mc,EcalPulseCovariancesRcd,frontier://FrontierProd/CMS_CONDITIONS')
-    
-    # Old
-    #from Configuration.AlCa.GlobalTag_condDBv2 import GlobalTag as customiseGlobalTag
-    #process.GlobalTag = customiseGlobalTag(process.GlobalTag, globaltag = 'auto:upgradePLS1')
     process.GlobalTag.connect   = 'frontier://FrontierProd/CMS_CONDITIONS'
     process.GlobalTag.pfnPrefix = cms.untracked.string('frontier://FrontierProd/')
     for pset in process.GlobalTag.toGet.value():
@@ -7804,7 +7798,7 @@ if 'GlobalTag' in process.__dict__:
 # override the L1 menu from an Xml file
 process.l1GtTriggerMenuXml = cms.ESProducer("L1GtTriggerMenuXmlProducer",
   TriggerMenuLuminosity = cms.string('startup'),
-  DefXmlFile = cms.string('L1Menu_Collisions2015_25ns_v1_L1T_Scales_20101224_Imp0_0x102f.xml'),
+  DefXmlFile = cms.string('L1Menu_Collisions2015_25ns_v2_L1T_Scales_20141121_Imp0_0x1030.xml'),
   VmeXmlFile = cms.string('')
 )
 process.L1GtTriggerMenuRcdSource = cms.ESSource("EmptyESSource",
@@ -7814,21 +7808,22 @@ process.L1GtTriggerMenuRcdSource = cms.ESSource("EmptyESSource",
 )
 process.es_prefer_l1GtParameters = cms.ESPrefer('L1GtTriggerMenuXmlProducer','l1GtTriggerMenuXml')
 
-# customize the L1 emulator to run customiseL1GtEmulatorFromRaw with HLT to switchToSimGtDigis
+# customize the L1 emulator to run customiseL1EmulatorFromRaw with HLT to switchToSimStage1Digis
 process.load( 'Configuration.StandardSequences.RawToDigi_cff' )
 process.load( 'Configuration.StandardSequences.SimL1Emulator_cff' )
 import L1Trigger.Configuration.L1Trigger_custom
 #
 
-# Run1 Emulator
-process = L1Trigger.Configuration.L1Trigger_custom.customiseL1GtEmulatorFromRaw( process )
+# 2015 Run2 emulator
+import L1Trigger.L1TCalorimeter.L1TCaloStage1_customForHLT
+process = L1Trigger.L1TCalorimeter.L1TCaloStage1_customForHLT.customiseL1EmulatorFromRaw( process )
 
 #
 process = L1Trigger.Configuration.L1Trigger_custom.customiseResetPrescalesAndMasks( process )
 # customize the HLT to use the emulated results
 import HLTrigger.Configuration.customizeHLTforL1Emulator
 process = HLTrigger.Configuration.customizeHLTforL1Emulator.switchToL1Emulator( process )
-process = HLTrigger.Configuration.customizeHLTforL1Emulator.switchToSimGtDigis( process )
+process = HLTrigger.Configuration.customizeHLTforL1Emulator.switchToSimStage1Digis( process )
 
 if 'MessageLogger' in process.__dict__:
     process.MessageLogger.categories.append('TriggerSummaryProducerAOD')
@@ -7846,16 +7841,12 @@ process.dqmOutput = cms.OutputModule("DQMRootOutputModule",
 
 process.DQMOutput = cms.EndPath( process.dqmOutput )
 
-# for HLT
 if hasattr(process, 'hltCsc2DRecHits'):
     process.hltCsc2DRecHits.wireDigiTag  = cms.InputTag("simMuonCSCDigis","MuonCSCWireDigi")
     process.hltCsc2DRecHits.stripDigiTag = cms.InputTag("simMuonCSCDigis","MuonCSCStripDigi")
-# for the L1 emulator
 if hasattr(process, 'cscReEmulTriggerPrimitiveDigis'):
     process.cscReEmulTriggerPrimitiveDigis.CSCComparatorDigiProducer = cms.InputTag("simMuonCSCDigis","MuonCSCComparatorDigi")
     process.cscReEmulTriggerPrimitiveDigis.CSCWireDigiProducer = cms.InputTag("simMuonCSCDigis","MuonCSCWireDigi")
-
-
 ##
 from SLHCUpgradeSimulations.Configuration.postLS1Customs import *
 process = customise_HLT( process )

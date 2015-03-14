@@ -285,12 +285,15 @@ if args.oldL1:
 else:
     hlt_args.extend(['auto:upgradePLS1',
                      '--l1-emulator',
-                     'gt',
+                     'stage1,gt',
                      '--l1Xml',
-                     'L1Menu_Collisions2015_25ns_v1_L1T_Scales_20101224_Imp0_0x102f.xml'])
+                     'L1Menu_Collisions2015_25ns_v2_L1T_Scales_20141121_Imp0_0x1030.xml'])
 if args.timing:
     hlt_args.extend(['--timing'])
 
+for argo in hlt_args:
+    print argo,
+print
 subprocess.call(hlt_args, stdout=base_file)
 base_file.close()
 
