@@ -282,7 +282,7 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   if(hltPfJetsInputTag.label() != "unused"){
     iEvent.getByLabel(hltPfJetsInputTag, jet_h);
     for(auto jet_it = jet_h->begin(); jet_it != jet_h->end(); ++jet_it){
-      if(jet_it->pt() < 35.0) continue;
+      if(jet_it->pt() < 30.0) continue;
       pfjets_pt  ->push_back(jet_it->pt());
       pfjets_eta ->push_back(jet_it->eta());
       pfjets_phi ->push_back(jet_it->phi());
@@ -358,7 +358,7 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   if(recoPfJetsInputTag.label() != "unused"){
     iEvent.getByLabel(recoPfJetsInputTag, reco_jet_h);
     for(auto reco_jet_it = reco_jet_h->begin(); reco_jet_it!=reco_jet_h->end(); ++reco_jet_it){
-      if(reco_jet_it->pt()<35.0) continue;
+      if(reco_jet_it->pt()<30.0) continue;
       reco_jet_pt->push_back(reco_jet_it->pt());
       reco_jet_eta->push_back(reco_jet_it->eta());
       reco_jet_phi->push_back(reco_jet_it->phi());
@@ -369,7 +369,7 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   if(recoGenJetsInputTag.label() != "unused"){
     iEvent.getByLabel(recoGenJetsInputTag, reco_genjet_h);
     for(auto reco_genjet_it = reco_genjet_h->begin(); reco_genjet_it!=reco_genjet_h->end(); ++reco_genjet_it){
-      if(reco_genjet_it->pt()<35.0) continue;
+      if(reco_genjet_it->pt()<30.0) continue;
       reco_genjet_pt->push_back(reco_genjet_it->pt());
       reco_genjet_eta->push_back(reco_genjet_it->eta());
       reco_genjet_phi->push_back(reco_genjet_it->phi());
@@ -473,7 +473,7 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   *gen_ht = 0;
   for(auto genjet_it = genjet_h->begin(); genjet_it != genjet_h->end(); ++genjet_it){
 
-    if(genjet_it->pt() < 35.0) continue;
+    if(genjet_it->pt() < 30.0) continue;
 
     genjets_pt  ->push_back(genjet_it->pt());
     genjets_eta ->push_back(genjet_it->eta());
@@ -510,7 +510,7 @@ void babymaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     for (reco::JetTagCollection::const_iterator jet = h_JetTags->begin(); jet != h_JetTags->end(); ++jet) {
       
       jetRef = TRef(h_Jets,jet->first.key());
-      if(jet->first->pt() < 35) continue;
+      if(jet->first->pt() < 30) continue;
       
       if(0) 
 	{

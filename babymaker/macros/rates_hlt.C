@@ -35,7 +35,7 @@ using std::endl;
 
 void ReadChains(vector<TChain*> &chain, vector<int> &entries, TString folder, vector<TString> filenames);
 
-void rates_hlt(TString isocut = "0.4", TString folder="root/15-03-12/el15/", 
+void rates_hlt(TString isocut = "0.8", TString folder="root/15-03-14/el15/", 
 	       bool applyCSV=false, bool onlyRates=false){
   styles style("2Dtitle"); style.setDefaultStyle(); gStyle->SetPaintTextFormat("4.1f");
   gStyle->SetHatchesLineWidth(2);
@@ -73,16 +73,19 @@ void rates_hlt(TString isocut = "0.4", TString folder="root/15-03-12/el15/",
   TBox box; box.SetLineColor(9); box.SetLineWidth(4); box.SetFillStyle(0); 
 
   // Cuts
-  TString Cuts[] = {"Max$(mus_pt*((mus_reliso)<isocut))>50&&not_pu"};
+  TString Cuts[] = {"Max$(mus_pt*((mus_reliso)<isocut))>15&&not_pu"};
+  //TString Cuts[] = {"Max$(mus_pt*((mus_reliso)<isocut))>15"};
   TString TitleCuts[] = {", RelIso_{R=0.2} < isocut"};
   if(isEl)
-    Cuts[0] = "Max$(els_pt*((els_trackiso+els_hcaliso+els_ecaliso)<isocut))>50&&not_pu";
+    //Cuts[0] = "Max$(els_pt*((els_trackiso+els_hcaliso+els_ecaliso)<isocut))>15&&not_pu";
+    Cuts[0] = "Max$(els_pt*(els_trackiso<0.4*isocut/0.8&&els_hcaliso<0.6*isocut/0.8&&els_ecaliso<0.5*isocut/0.8))>15&&not_pu";
+  //Cuts[0] = "Max$(els_pt*((els_trackiso+els_hcaliso+els_ecaliso)<isocut))>15";
   Cuts[0].ReplaceAll("isocut",isocut);
   // Cuts for precise rates
   vector<TString> cutTrigger, nameTrigger;
   cutTrigger.push_back("onht>=600"); nameTrigger.push_back("HT600");
   cutTrigger.push_back("onht>=400&&abs(onmet)>=70"); nameTrigger.push_back("HT400_MET70");
-  cutTrigger.push_back("onht>=400&&Max$(bjets_csv*(bjets_pt>40))>0.7"); nameTrigger.push_back("HT400_CSV");
+  cutTrigger.push_back("onht>=400&&Max$(bjets_csv*(bjets_pt>35))>0.7"); nameTrigger.push_back("HT400_CSV");
   cutTrigger.push_back("(0"); nameTrigger.push_back("\tAll");
   for(unsigned icut(0); icut<cutTrigger.size()-1; icut++)
     cutTrigger[cutTrigger.size()-1] += "||"+cutTrigger[icut];
@@ -91,7 +94,7 @@ void rates_hlt(TString isocut = "0.4", TString folder="root/15-03-12/el15/",
     cutTrigger[icut] = "1.4e-2/19600*weight*(" + Cuts[0] + "&&" + cutTrigger[icut] + ")";
 
   if(applyCSV){
-    Cuts[0] += "&&Max$(bjets_csv*(bjets_pt>40))>0.7";
+    Cuts[0] += "&&Max$(bjets_csv*(bjets_pt>35))>0.7";
     TitleCuts[0] += ", 1 b-tag";
   }
   TitleCuts[0].ReplaceAll("isocut",isocut);
@@ -232,4 +235,49 @@ void ReadChains(vector<TChain*> &chain, vector<int> &entries, TString folder, ve
       else entries.push_back(nori_genmu0);
     } else entries.push_back(0);
   }// Loop over samples
+}
+
+
+void singlerate_hlt(TString cuts="onht>600||onht>400&&onmet>70||onht>400&&Max$(bjets_csv*(bjets_pt>40))>0.7", 
+		    TString muisocut = "1.2", TString eisocut = "0.8", 
+		    TString folder="root/15-03-14/"){
+  //Files
+  vector<TString> filenames, Htag;
+  vector<TChain*> chain;
+  vector<int> noriginal;
+  vector<int> indchain;
+  vector<double> trigger_rate(2,0.);
+  TString leptag[] = {"mu15", "el15"};
+  TString Cuts[] = {"Max$(mus_pt*((mus_reliso)<"+muisocut+"))>15&&not_pu", 
+		    "Max$(els_pt*(els_trackiso<0.4*"+eisocut+
+		    "/0.8&&els_hcaliso<0.6*"+eisocut+"/0.8&&els_ecaliso<0.5*"+eisocut+"/0.8))>15&&not_pu"};
+  //"not_pu"};
+  //"Max$(els_pt*((els_trackiso+els_hcaliso+els_ecaliso)<"+eisocut+"))>15&&not_pu"};
+  cout<<endl;
+  for(int lep(0); lep<2; lep++){
+    filenames.clear(); Htag.clear(); chain.clear(); noriginal.clear(); indchain.clear();
+
+    filenames.push_back("/*QCD*");	        Htag.push_back("QCD");
+    filenames.push_back("/*TT*");	        Htag.push_back("tt");
+    filenames.push_back("/W*");                 Htag.push_back("Wjets");
+    Htag.push_back("Total");
+    ReadChains(chain, noriginal, folder+"/"+leptag[lep], filenames);
+    if(chain.size()==0) return;
+    indchain.push_back(0);
+    indchain.push_back(1);
+    indchain.push_back(2);
+    indchain.push_back(Htag.size()-1);
+    const int NSam = indchain.size();
+
+    /////////////////// Calculating specific trigger rates  ////////////////
+    TH1D histo1d("histo1d","",1,0,1);
+    TString totCut("1.4e-2/19600*weight*(" + Cuts[lep] + "&&("+cuts+"))");
+    for(int sam(0); sam < NSam-1; sam++){
+      if(Htag[indchain[sam]].Contains("sig")) continue;
+      chain[indchain[sam]]->Project("histo1d", "onht", totCut);
+      trigger_rate[lep] += histo1d.Integral(0,2);
+    } // Loop over samples
+    cout<<leptag[lep]<<": "<<RoundNumber(trigger_rate[lep],1)<<" Hz\t";
+  }
+  cout<<"Total: "<< RoundNumber(trigger_rate[0]+trigger_rate[1],1)<<" Hz"<<endl<<endl;
 }
