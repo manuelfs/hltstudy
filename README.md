@@ -2,21 +2,24 @@ hltstudy
 ==========
 
 Code to make flat ntuples with HLT quantities.
-It's been tested on `CMSSW_7_4_0_pre8`. 
+It's been tested on `CMSSW_7_4_0_pre9`. 
 
 #### Making ntuples
-Issue the following commands on a machine with SLC6 and CMSSW_7_4_0_pre8:
+Issue the following commands on a machine with SLC6 and CMSSW_7_4_0_pre9:
 
-    cmsrel CMSSW_7_4_0_pre8
-    cd CMSSW_7_4_0_pre8/src
+    cmsrel CMSSW_7_4_0_pre9
+    cd CMSSW_7_4_0_pre9/src
     cmsenv
     git cms-addpkg HLTrigger/Configuration
-    git cms-merge-topic cms-tsg-storm:hltMenuUpdates_74X
+    git cms-merge-topic cms-tsg-storm:hltUpdatesAfter740pre9
     git clone git@github.com:manuelfs/hltstudy
     scram b -j$(getconf _NPROCESSORS_ONLN)
-    cmsRun hltstudy/babymaker/python/cfg_el15_740.py
 
-This will create a flat ntuple named ntuple_hlt_el15.root in the
+    cd hltstudy/babymaker/python/
+    ./get_config.py /users/manuelf/CMSSW_7_4_X/ForBabies --output cfg_el15_740pre9.py
+    cmsRun cfg_el15_740pre9.py
+
+This will create a flat ntuple named ntuple_hlt_el.root in the
 current directory with events that pass a trigger with HT>200 GeV
 and pT of electron > 15 GeV.
 

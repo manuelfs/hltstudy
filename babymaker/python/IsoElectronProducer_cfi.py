@@ -16,7 +16,10 @@ IsoElectronProducer = cms.EDProducer(
     ecalTag = cms.InputTag("hltEle15VVVLEcalIsoFilter"),
     hcalTag = cms.InputTag("hltEle15VVVLHcalIsoFilter"),
     trackTag = cms.InputTag("hltEle15VVVLGsfTrackIsoFilter"),
-    ecalMapTag = cms.InputTag("hltEgammaEcalPFClusterIso"),
-    hcalMapTag = cms.InputTag("hltEgammaHcalPFClusterIso"),
-    trackMapTag = cms.InputTag("hltEgammaEleGsfTrackIso")
+    #ecalMapTag = cms.InputTag("hltEgammaEcalPFClusterIso"),
+    #hcalMapTag = cms.InputTag("hltEgammaHcalPFClusterIso"),
+    #trackMapTag = cms.InputTag("hltEgammaEleGsfTrackIso")
+    ecalMapTag = cms.InputTag("hltEgammaEcalPFClusterIsoR02"),
+    hcalMapTag = cms.InputTag("hltEgammaHcalPFClusterIsoR02"),
+    trackMapTag = cms.InputTag("hltEgammaEleGsfTrackIsoR02")
 )
