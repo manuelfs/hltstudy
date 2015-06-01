@@ -34,11 +34,13 @@ double deltaphi(double phi1, double phi2);
 float dR(float eta1, float eta2, float phi1, float phi2);
 void ngenleptons(TString filename, vector<int> &nori_genels, vector<int> &nori_genmus, vector<int> genlep_thresh);
 
-void smallntuple(TString folder="/hadoop/cms/store/user/manuelf/HLT/", TString subfolder="test",
+void smallntuple(TString subfolder="test",
 		 TString tagFolders="", int maxfiles=-1){
   gErrorIgnoreLevel=kError; // Turns off "no dictionary for class" warnings
   TString ntupledir = "ntuples/"+subfolder+"/";
   gSystem->mkdir(ntupledir);
+
+  TString basefolder="/hadoop/cms/store/user/manuelf/";
 
   int totentries, nori_genmu0, nori_genel0;
   vector<int> genlep_thresh, v_nori_genels, v_nori_genmus;
@@ -126,138 +128,147 @@ void smallntuple(TString folder="/hadoop/cms/store/user/manuelf/HLT/", TString s
 
   vector<int_double> mus_sorted, els_sorted, bjets_sorted;
   TString filename, rootname, sampledir;
-  vector<TString> dirs = dirlist(folder, "dir", tagFolders);
-  for(unsigned idir(0); idir < dirs.size(); idir++){
-    sampledir = folder+"/"+dirs[idir];
-    //if(sampledir.Contains("QCD")) continue;
-    chain.Add(sampledir+"/*.root");
-    totentries = chain.GetEntries();
-    int totentry(0);
-    chain.Reset();
-    float xsection = cross_section(dirs[idir]);
+  
+  vector<TString> alldirs = dirlist(basefolder, "dir");
+  for(unsigned iall(0); iall < alldirs.size(); iall++){
+    TString folder(basefolder+alldirs[iall]);
+    vector<TString> dirs = dirlist(folder, "dir", tagFolders);
+    for(unsigned idir(0); idir < dirs.size(); idir++){
+      sampledir = folder+"/"+dirs[idir];
+      vector<TString> inner = dirlist(sampledir, "dir");
+      sampledir += ("/"+inner[0]);
+      inner = dirlist(sampledir, "dir");
+      sampledir += ("/"+inner[0]);
+      if(!sampledir.Contains("SMS")) continue;
+      chain.Add(sampledir+"/*.root");
+      totentries = chain.GetEntries();
+      int totentry(0);
+      chain.Reset();
+      float xsection = cross_section(dirs[idir]);
 
-    vector<TString> rootfiles = dirlist(sampledir, ".root");
-    cout<<endl<<"Adding the "<<rootfiles.size()<<" files in "<<sampledir
-	<<" with "<<totentries<<" entries"<<endl;
-    filename = ntupledir+dirs[idir]+".root";
-    TFile rootfile(filename, "recreate");
-    int nfiles = static_cast<int>(rootfiles.size());
-    if(maxfiles>0 && maxfiles<nfiles) nfiles = maxfiles;
-    for(int ifile(0); ifile < nfiles; ifile++){
-      rootname = sampledir+"/"+rootfiles[ifile];
-      chain.Add(rootname);
-      hlt.Init(&chain);
-      long entries(chain.GetEntries());
-      for(int entry(0); entry<entries; entry++, totentry++){
-	if((totentry+1)%500000==0) cout<<"Done "<<totentry+1<<" entries"<<endl;
-	hlt.GetEntry(entry);
-	// Saving only events with at least one lepton
-	if(mus_pt().size()==0 && els_pt().size()==0) continue;
+      vector<TString> rootfiles = dirlist(sampledir, ".root");
+      cout<<endl<<"Adding the "<<rootfiles.size()<<" files in "<<sampledir
+	  <<" with "<<totentries<<" entries"<<endl;
+      filename = ntupledir+dirs[idir]+".root";
+      TFile rootfile(filename, "recreate");
+      int nfiles = static_cast<int>(rootfiles.size());
+      if(maxfiles>0 && maxfiles<nfiles) nfiles = maxfiles;
+      for(int ifile(0); ifile < nfiles; ifile++){
+	rootname = sampledir+"/"+rootfiles[ifile];
+	chain.Add(rootname);
+	hlt.Init(&chain);
+	long entries(chain.GetEntries());
+	for(int entry(0); entry<entries; entry++, totentry++){
+	  if((totentry+1)%500000==0) cout<<"Done "<<totentry+1<<" entries"<<endl;
+	  hlt.GetEntry(entry);
+	  // Saving only events with at least one lepton
+	  if(mus_pt().size()==0 && els_pt().size()==0) continue;
 
-	caloht = calo_ht();
-	onht = pf_ht();
-	onmet = met_pt();
-	onmet_phi = met_phi();
-	genht = 0;
-	// If the leading jet is not matched to the any genjet, the event is likely to be PU
-	// https://indico.cern.ch/event/351559/contribution/4/material/slides/0.pdf
-	not_pu = false;
-	if(pfjets_eta().size()>0){
-	  for(unsigned ijet(0); ijet < genjets_pt().size(); ijet++){
-	    if(dR(genjets_eta().at(ijet),pfjets_eta().at(0), genjets_phi().at(ijet),pfjets_phi().at(0)) < 0.5){
-	      not_pu = true;
-	      break;
-	    }
-	  } // Loop over genjets
-	}
-	for(unsigned ijet(0); ijet < genjets_pt().size(); ijet++)
-	  if(genjets_pt().at(ijet)>40 && genjets_eta().at(ijet)<3) genht += genjets_pt().at(ijet);
-	genmet = gen_met();
-
-	// Sort object lists in terms of pt, and save them
-	mus_sorted = sortlists(nmus, &muspt, &museta, &musphi, mus_pt(), mus_eta(), mus_phi());
-	musreliso.resize(0); musgenpt.resize(0); musmindr.resize(0);
-	for(int ilep(0); ilep < nmus; ilep++){
-	  musreliso.push_back(mus_iso()[mus_sorted[ilep].first]);
-	  float mindr(999.);
-	  int imin(-1);
-	  for(unsigned igen(0); igen < genmus_pt().size(); igen++){
-	    if(abs(genmus_mom_id()[igen]) == 24 || abs(genmus_gmom_id()[igen]) == 24 || 
-	       abs(genmus_ggmom_id()[igen]) == 24){
-	      float dr = abs(dR(museta[ilep], genmus_eta()[igen], musphi[ilep], genmus_phi()[igen]));
-	      float mingenpt = genmus_pt()[igen];
-	      if(dr < mindr && dr < mindrcut && abs((mingenpt-muspt[ilep])/muspt[ilep])<0.3) 
-		{mindr = dr; imin = igen;}
-	    }
-	  } // Loop over genmus
-	  if(imin>=0) musgenpt.push_back(genmus_pt()[imin]);
-	  else musgenpt.push_back(-99);
-	  mindr = 999.;
-	  for(unsigned igen(0); igen < gentop_pt().size(); igen++){
-	    float dr = dR(museta[ilep], gentop_eta()[igen], musphi[ilep], gentop_phi()[igen]);
-	    if(dr < mindr) mindr = dr;
+	  caloht = calo_ht();
+	  onht = pf_ht();
+	  onmet = met_pt();
+	  onmet_phi = met_phi();
+	  genht = 0;
+	  // If the leading jet is not matched to the any genjet, the event is likely to be PU
+	  // https://indico.cern.ch/event/351559/contribution/4/material/slides/0.pdf
+	  not_pu = false;
+	  if(pfjets_eta().size()>0){
+	    for(unsigned ijet(0); ijet < genjets_pt().size(); ijet++){
+	      if(dR(genjets_eta().at(ijet),pfjets_eta().at(0), genjets_phi().at(ijet),pfjets_phi().at(0)) < 0.5){
+		not_pu = true;
+		break;
+	      }
+	    } // Loop over genjets
 	  }
-	  musmindr.push_back(mindr);
-	}
-	sortlists(ngenmus, &genmuspt, &genmuseta, &genmusphi, genmus_pt(), genmus_eta(), genmus_phi());
-	els_sorted = sortlists(nels, &elspt, &elseta, &elsphi, els_pt(), els_eta(), els_phi());
-	elsreliso.resize(0); elstrackiso.resize(0); elsecaliso.resize(0); elshcaliso.resize(0);
-	elsclustershape.resize(0); elshe.resize(0); elseminusp.resize(0); elsdeta.resize(0); elsdphi.resize(0); 
-	elsgenpt.resize(0); elsmindr.resize(0);
-	for(int ilep(0); ilep < nels; ilep++){
-	  elstrackiso.push_back(els_track_iso()[els_sorted[ilep].first]);
-	  elsecaliso.push_back(els_ecal_iso()[els_sorted[ilep].first]);
-	  elshcaliso.push_back(els_hcal_iso()[els_sorted[ilep].first]);
-	  elsreliso.push_back(elstrackiso[ilep]+elsecaliso[ilep]+elshcaliso[ilep]);
-	  elsclustershape.push_back(els_clustershape()[els_sorted[ilep].first]);
-	  elshe.push_back(els_he()[els_sorted[ilep].first]);
-	  elseminusp.push_back(els_eminusp()[els_sorted[ilep].first]);
-	  elsdeta.push_back(els_deta()[els_sorted[ilep].first]);
-	  elsdphi.push_back(els_dphi()[els_sorted[ilep].first]);
-	  float mindr(999.);
-	  int imin(-1);
-	  for(unsigned igen(0); igen < genels_pt().size(); igen++){
-	    if(abs(genels_mom_id()[igen]) == 24 || abs(genels_gmom_id()[igen]) == 24 || 
-	       abs(genels_ggmom_id()[igen]) == 24){
-	      float dr = abs(dR(elseta[ilep], genels_eta()[igen], elsphi[ilep], genels_phi()[igen]));
-	      float mingenpt = genels_pt()[igen];
-	      if(dr < mindr && dr < mindrcut && abs((mingenpt-elspt[ilep])/elspt[ilep])<0.3) 
-		{mindr = dr; imin = igen;}
-	    }
-	  } // Loop over genels
-	  if(imin>=0) elsgenpt.push_back(genels_pt()[imin]);
-	  else elsgenpt.push_back(-99);
-	  mindr = 999.;
-	  for(unsigned igen(0); igen < gentop_pt().size(); igen++){
-	    float dr = dR(elseta[ilep], gentop_eta()[igen], elsphi[ilep], gentop_phi()[igen]);
-	    if(dr < mindr) mindr = dr;
-	  }
-	  elsmindr.push_back(mindr);
-	}
+	  for(unsigned ijet(0); ijet < genjets_pt().size(); ijet++)
+	    if(genjets_pt().at(ijet)>40 && genjets_eta().at(ijet)<3) genht += genjets_pt().at(ijet);
+	  genmet = gen_met();
 
-	sortlists(ngenels, &genelspt, &genelseta, &genelsphi, genels_pt(), genels_eta(), genels_phi());
-	sortlists(njets, &jetspt, &jetseta, &jetsphi, pfjets_pt(), pfjets_eta(), pfjets_phi());
-	bjets_sorted = sortlists(nbjets, &bjetspt, &bjetseta, &bjetsphi, bjets_pt(), bjets_eta(), bjets_phi());
-	bjetscsv.resize(0);
-	for(int ilep(0); ilep < nbjets; ilep++)
-	  bjetscsv.push_back(bjets_csv()[bjets_sorted[ilep].first]);
-	sortlists(ngenjets, &genjetspt, &genjetseta, &genjetsphi, genjets_pt(), genjets_eta(), genjets_phi());
-	wl1ht200 = (0.5*TMath::Erf((1.35121e-02)*(genht-(3.02695e+02)))+0.5);
-	wlumi = xsection*luminosity / static_cast<double>(totentries);
-	weight = wl1ht200*wlumi;
-	tree.Fill();
-      }
-      chain.Reset(); 
-    } // Loop over files in the sample folder
-    tree.Write();
-    ngenleptons(filename, v_nori_genels, v_nori_genmus, genlep_thresh);
-    nori_genel0 = v_nori_genels[0]; nori_genmu0 = v_nori_genmus[0]; 
-    treeglobal.Fill();
-    treeglobal.Write();
-    rootfile.Close();
-    cout<<"Written tree "<<filename<<endl;
-    tree.Reset(); treeglobal.Reset();
-  } // Loop over sample folders
+	  // Sort object lists in terms of pt, and save them
+	  mus_sorted = sortlists(nmus, &muspt, &museta, &musphi, mus_pt(), mus_eta(), mus_phi());
+	  musreliso.resize(0); musgenpt.resize(0); musmindr.resize(0);
+	  for(int ilep(0); ilep < nmus; ilep++){
+	    musreliso.push_back(mus_iso()[mus_sorted[ilep].first]);
+	    float mindr(999.);
+	    int imin(-1);
+	    for(unsigned igen(0); igen < genmus_pt().size(); igen++){
+	      if(abs(genmus_mom_id()[igen]) == 24 || abs(genmus_gmom_id()[igen]) == 24 || 
+		 abs(genmus_ggmom_id()[igen]) == 24){
+		float dr = abs(dR(museta[ilep], genmus_eta()[igen], musphi[ilep], genmus_phi()[igen]));
+		float mingenpt = genmus_pt()[igen];
+		if(dr < mindr && dr < mindrcut && abs((mingenpt-muspt[ilep])/muspt[ilep])<0.3) 
+		  {mindr = dr; imin = igen;}
+	      }
+	    } // Loop over genmus
+	    if(imin>=0) musgenpt.push_back(genmus_pt()[imin]);
+	    else musgenpt.push_back(-99);
+	    mindr = 999.;
+	    for(unsigned igen(0); igen < gentop_pt().size(); igen++){
+	      float dr = dR(museta[ilep], gentop_eta()[igen], musphi[ilep], gentop_phi()[igen]);
+	      if(dr < mindr) mindr = dr;
+	    }
+	    musmindr.push_back(mindr);
+	  }
+	  sortlists(ngenmus, &genmuspt, &genmuseta, &genmusphi, genmus_pt(), genmus_eta(), genmus_phi());
+	  els_sorted = sortlists(nels, &elspt, &elseta, &elsphi, els_pt(), els_eta(), els_phi());
+	  elsreliso.resize(0); elstrackiso.resize(0); elsecaliso.resize(0); elshcaliso.resize(0);
+	  elsclustershape.resize(0); elshe.resize(0); elseminusp.resize(0); elsdeta.resize(0); elsdphi.resize(0); 
+	  elsgenpt.resize(0); elsmindr.resize(0);
+	  for(int ilep(0); ilep < nels; ilep++){
+	    elstrackiso.push_back(els_track_iso()[els_sorted[ilep].first]);
+	    elsecaliso.push_back(els_ecal_iso()[els_sorted[ilep].first]);
+	    elshcaliso.push_back(els_hcal_iso()[els_sorted[ilep].first]);
+	    elsreliso.push_back(elstrackiso[ilep]+elsecaliso[ilep]+elshcaliso[ilep]);
+	    elsclustershape.push_back(els_clustershape()[els_sorted[ilep].first]);
+	    elshe.push_back(els_he()[els_sorted[ilep].first]);
+	    elseminusp.push_back(els_eminusp()[els_sorted[ilep].first]);
+	    elsdeta.push_back(els_deta()[els_sorted[ilep].first]);
+	    elsdphi.push_back(els_dphi()[els_sorted[ilep].first]);
+	    float mindr(999.);
+	    int imin(-1);
+	    for(unsigned igen(0); igen < genels_pt().size(); igen++){
+	      if(abs(genels_mom_id()[igen]) == 24 || abs(genels_gmom_id()[igen]) == 24 || 
+		 abs(genels_ggmom_id()[igen]) == 24){
+		float dr = abs(dR(elseta[ilep], genels_eta()[igen], elsphi[ilep], genels_phi()[igen]));
+		float mingenpt = genels_pt()[igen];
+		if(dr < mindr && dr < mindrcut && abs((mingenpt-elspt[ilep])/elspt[ilep])<0.3) 
+		  {mindr = dr; imin = igen;}
+	      }
+	    } // Loop over genels
+	    if(imin>=0) elsgenpt.push_back(genels_pt()[imin]);
+	    else elsgenpt.push_back(-99);
+	    mindr = 999.;
+	    for(unsigned igen(0); igen < gentop_pt().size(); igen++){
+	      float dr = dR(elseta[ilep], gentop_eta()[igen], elsphi[ilep], gentop_phi()[igen]);
+	      if(dr < mindr) mindr = dr;
+	    }
+	    elsmindr.push_back(mindr);
+	  }
+
+	  sortlists(ngenels, &genelspt, &genelseta, &genelsphi, genels_pt(), genels_eta(), genels_phi());
+	  sortlists(njets, &jetspt, &jetseta, &jetsphi, pfjets_pt(), pfjets_eta(), pfjets_phi());
+	  bjets_sorted = sortlists(nbjets, &bjetspt, &bjetseta, &bjetsphi, bjets_pt(), bjets_eta(), bjets_phi());
+	  bjetscsv.resize(0);
+	  for(int ilep(0); ilep < nbjets; ilep++)
+	    bjetscsv.push_back(bjets_csv()[bjets_sorted[ilep].first]);
+	  sortlists(ngenjets, &genjetspt, &genjetseta, &genjetsphi, genjets_pt(), genjets_eta(), genjets_phi());
+	  wl1ht200 = (0.5*TMath::Erf((1.35121e-02)*(genht-(3.02695e+02)))+0.5);
+	  wlumi = xsection*luminosity / static_cast<double>(totentries);
+	  weight = wl1ht200*wlumi;
+	  tree.Fill();
+	}
+	chain.Reset(); 
+      } // Loop over files in the sample folder
+      tree.Write();
+      ngenleptons(filename, v_nori_genels, v_nori_genmus, genlep_thresh);
+      nori_genel0 = v_nori_genels[0]; nori_genmu0 = v_nori_genmus[0]; 
+      treeglobal.Fill();
+      treeglobal.Write();
+      rootfile.Close();
+      cout<<"Written tree "<<filename<<endl;
+      tree.Reset(); treeglobal.Reset();
+    } // Loop over sample folders
+  } // Loop over all dirs in /hadoop/cms/store/user/manuelf/
 }
 
 void ngenleptons(TString filename, vector<int> &nori_genels, vector<int> &nori_genmus, vector<int> genlep_thresh){

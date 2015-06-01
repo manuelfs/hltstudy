@@ -7,11 +7,11 @@ It's been tested on `CMSSW_7_4_0_pre9`.
 #### Making ntuples
 Issue the following commands on a machine with SLC6 and CMSSW_7_4_0_pre9:
 
-    cmsrel CMSSW_7_4_0_pre9
-    cd CMSSW_7_4_0_pre9/src
+    cmsrel CMSSW_7_4_4
+    cd CMSSW_7_4_4/src
     cmsenv
     git cms-addpkg HLTrigger/Configuration
-    git cms-merge-topic cms-tsg-storm:hltUpdatesAfter740pre9
+    git cms-checkdeps -A -a
     git clone git@github.com:manuelfs/hltstudy
     scram b -j$(getconf _NPROCESSORS_ONLN)
 

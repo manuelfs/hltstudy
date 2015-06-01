@@ -236,7 +236,7 @@ parser.add_argument('--output',
                     default = 'config.py',
                     help = 'File to python configuration to')
 parser.add_argument('--input',
-                    default = 'file:/nfs-7/userdata/jaehyeok/HLT/ttbar-13tev-850evts.root',
+                    default = 'file:/nfs-7/userdata/manuelf/data/SMS-T1tttt_2J_mGl-1500_mLSP-100_Tune4C_13TeV-madgraph-tauola__GEN-SIM-RAW__PU20bx25_POSTLS170_V5-v2.root',
                     help = 'Path to input data file')
 parser.add_argument('--max-events',
                     type = int,
