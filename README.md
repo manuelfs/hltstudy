@@ -2,22 +2,23 @@ hltstudy
 ==========
 
 Code to make flat ntuples with HLT quantities.
-It's been tested on `CMSSW_7_4_0_pre9`. 
+It's been tested on `CMSSW_7_4_7`. 
 
 #### Making ntuples
-Issue the following commands on a machine with SLC6 and CMSSW_7_4_0_pre9:
+Issue the following commands on a machine with SLC6:
 
-    cmsrel CMSSW_7_4_4
-    cd CMSSW_7_4_4/src
+    cmsrel CMSSW_7_4_7
+    cd CMSSW_7_4_7/src
     cmsenv
     git cms-addpkg HLTrigger/Configuration
+    git cms-merge-topic cms-tsg-storm:hltUpdatesOnTopOf745plusEpsilon_74X
     git cms-checkdeps -A -a
     git clone git@github.com:manuelfs/hltstudy
     scram b -j$(getconf _NPROCESSORS_ONLN)
 
     cd hltstudy/babymaker/python/
-    ./get_config.py /users/manuelf/CMSSW_7_4_X/ForBabies --output cfg_el15_740pre9.py
-    cmsRun cfg_el15_740pre9.py
+    ./get_config.py /users/manuelf/CMSSW_7_4_X/SingleLepton746Babies --output cfg_el15_747.py
+    cmsRun cfg_el15_747.py
 
 This will create a flat ntuple named ntuple_hlt_el.root in the
 current directory with events that pass a trigger with HT>200 GeV
@@ -35,4 +36,4 @@ The file `setup_cff.py` was obtained with
 
 The files `hltstudy/babymaker/python/cfg_xxxx.py` are based in confDB paths that were obtained with
 
-    ./get_config.py /users/manuelf/CMSSW_7_4_X/ForBabies --output cfg_el15_740.py
+    ./get_config.py /users/manuelf/CMSSW_7_4_X/SingleLepton746Babies --output cfg_el15_747.py

@@ -66,7 +66,7 @@ def WriteOutput(file, reco, timing):
     file.write("process.load('FWCore.MessageService.MessageLogger_cfi')\n")
     file.write("process.out = cms.OutputModule(\n")
     file.write("        'PoolOutputModule',\n")
-    file.write("        fileName     = cms.untracked.string('ntuple_hlt_REPLACE.root'), ##\n")
+    file.write("        fileName     = cms.untracked.string('ntuple_hlt_REPLACE15.root'), ##\n")
     file.write("        dropMetaData = cms.untracked.string('ALL')\n")
     file.write("        #SelectEvents = cms.untracked.PSet(\n")
     file.write("            #SelectEvents = cms.vstring('HLT_L1HTT')\n")
@@ -283,7 +283,7 @@ hlt_args=['hltGetConfiguration',
 if args.oldL1:
     hlt_args.extend(['auto:startup_GRun'])
 else:
-    hlt_args.extend(['auto:upgradePLS1',
+    hlt_args.extend(['FALL1374_25V4',
                      '--l1-emulator',
                      'stage1,gt',
                      '--l1Xml',
@@ -332,9 +332,9 @@ for line in lines:
     elif line.find('CMSSW version specific customizations') != -1:
         if args.timing and not found_timer_service:
             WriteTimingOutput(intermediate_file)
-    elif line.find('customiseGlobalTag(') != -1:
-        line = "    process.GlobalTag = customiseGlobalTag(process.GlobalTag, globaltag = 'MCRUN2_72_V3A',conditions='TrackerAlignmentExtendedError_2011Realistic_v1_mc,TrackerAlignmentErrorExtendedRcd,frontier://FrontierProd/CMS_CONDITIONS+MuonDTAPEObjectsExtended_v0_mc,DTAlignmentErrorExtendedRcd,frontier://FrontierProd/CMS_CONDITIONS+MuonCSCAPEObjectsExtended_v0_mc,CSCAlignmentErrorExtendedRcd,frontier://FrontierProd/CMS_CONDITIONS+EcalSamplesCorrelation_mc,EcalSamplesCorrelationRcd,frontier://FrontierProd/CMS_CONDITIONS+EcalPulseShapes_mc,EcalPulseShapesRcd,frontier://FrontierProd/CMS_CONDITIONS+EcalPulseCovariances_mc,EcalPulseCovariancesRcd,frontier://FrontierProd/CMS_CONDITIONS')\n"
     elif line.find("process.HLTSchedule") != -1:
+        line = '# '+line
+    elif line.find("DQMOutput") != -1 and line.find("EndPath") != -1:
         line = '# '+line
 
     intermediate_file.write(line)
