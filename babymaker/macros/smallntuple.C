@@ -139,7 +139,7 @@ void smallntuple(TString subfolder="test",
       sampledir += ("/"+inner[0]);
       inner = dirlist(sampledir, "dir");
       sampledir += ("/"+inner[0]);
-      if(!sampledir.Contains("SMS")) continue;
+      //if(!sampledir.Contains("SMS")) continue;
       chain.Add(sampledir+"/*.root");
       totentries = chain.GetEntries();
       int totentry(0);

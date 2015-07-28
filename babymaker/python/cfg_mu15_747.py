@@ -1,4 +1,4 @@
-# /users/manuelf/CMSSW_7_4_X/SingleLepton746Babies/V1 (CMSSW_7_4_6_patch3)
+# /users/manuelf/CMSSW_7_4_X/SingleLepton746Babies/V2 (CMSSW_7_4_6_patch3)
 
 import FWCore.ParameterSet.Config as cms
 
@@ -10,7 +10,7 @@ process.load('hltstudy.babymaker.IsoElectronProducer_cfi')
 process.load('hltstudy.babymaker.babymakermu_cfi')
 
 process.HLTConfigVersion = cms.PSet(
-  tableName = cms.string('/users/manuelf/CMSSW_7_4_X/SingleLepton746Babies/V1')
+  tableName = cms.string('/users/manuelf/CMSSW_7_4_X/SingleLepton746Babies/V2')
 )
 
 process.hltTriggerType = cms.EDFilter( "HLTTriggerTypeFilter",
@@ -4108,7 +4108,7 @@ process.hltL3MuonCombRelIsolationVVVL = cms.EDProducer( "L3MuonCombinedRelativeI
     CutsPSet = cms.PSet( 
       ConeSizes = cms.vdouble( 0.2 ),
       ComponentName = cms.string( "SimpleCuts" ),
-      Thresholds = cms.vdouble( 1.2 ),
+      Thresholds = cms.vdouble( 9999.0 ),
       maxNTracks = cms.int32( -1 ),
       EtaBounds = cms.vdouble( 2.411 ),
       applyCutsORmaxNTracks = cms.bool( False )
@@ -6588,9 +6588,9 @@ process.hltEle15VVVLEcalIsoFilter = cms.EDFilter( "HLTEgammaGenericFilter",
     saveTags = cms.bool( False ),
     thrOverE2EB = cms.double( -1.0 ),
     thrRegularEE = cms.double( -1.0 ),
-    thrOverEEE = cms.double( 0.5 ),
+    thrOverEEE = cms.double( 9999.0 ),
     L1IsoCand = cms.InputTag( "hltEgammaCandidates" ),
-    thrOverEEB = cms.double( 0.5 ),
+    thrOverEEB = cms.double( 9999.0 ),
     thrRegularEB = cms.double( -1.0 ),
     lessThan = cms.bool( True ),
     useEt = cms.bool( True ),
@@ -6740,9 +6740,9 @@ process.hltEle15VVVLHcalIsoFilter = cms.EDFilter( "HLTEgammaGenericFilter",
     saveTags = cms.bool( False ),
     thrOverE2EB = cms.double( -1.0 ),
     thrRegularEE = cms.double( -1.0 ),
-    thrOverEEE = cms.double( 0.6 ),
+    thrOverEEE = cms.double( 9999.0 ),
     L1IsoCand = cms.InputTag( "hltEgammaCandidates" ),
-    thrOverEEB = cms.double( 0.6 ),
+    thrOverEEB = cms.double( 9999.0 ),
     thrRegularEB = cms.double( -1.0 ),
     lessThan = cms.bool( True ),
     useEt = cms.bool( True ),
@@ -7587,9 +7587,9 @@ process.hltEle15VVVLGsfTrackIsoFilter = cms.EDFilter( "HLTEgammaGenericFilter",
     saveTags = cms.bool( True ),
     thrOverE2EB = cms.double( -1.0 ),
     thrRegularEE = cms.double( -1.0 ),
-    thrOverEEE = cms.double( 0.4 ),
+    thrOverEEE = cms.double( 9999.0 ),
     L1IsoCand = cms.InputTag( "hltEgammaCandidates" ),
-    thrOverEEB = cms.double( 0.4 ),
+    thrOverEEB = cms.double( 9999.0 ),
     thrRegularEB = cms.double( -1.0 ),
     lessThan = cms.bool( True ),
     useEt = cms.bool( True ),
@@ -7722,7 +7722,7 @@ if 'hltDQML1SeedLogicScalers' in process.__dict__:
 
 # limit the number of events to be processed
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32( 150 )
+    input = cms.untracked.int32( 30 )
 )
 
 # enable the TrigReport and TimeReport
@@ -7734,7 +7734,7 @@ process.options = cms.untracked.PSet(
 process.load('FWCore.MessageService.MessageLogger_cfi')
 process.out = cms.OutputModule(
         'PoolOutputModule',
-        fileName     = cms.untracked.string('ntuple_hlt_mu15_747.root'), ##
+        fileName     = cms.untracked.string('ntuple_hlt_mu15_747noiso.root'), ##
         dropMetaData = cms.untracked.string('ALL')
         #SelectEvents = cms.untracked.PSet(
             #SelectEvents = cms.vstring('HLT_L1HTT')
@@ -7753,7 +7753,7 @@ process.HLT_Mu15_IsoVVVL_BTag_PFHT_PFMET_v2 = cms.Path( process.SeqHLT_Mu15_IsoV
 # override the GlobalTag, connection string and pfnPrefix
 if 'GlobalTag' in process.__dict__:
     from Configuration.AlCa.GlobalTag_condDBv2 import GlobalTag as customiseGlobalTag
-    process.GlobalTag = customiseGlobalTag(process.GlobalTag, globaltag = 'MCRUN2_72_V3A',conditions='TrackerAlignmentExtendedError_2011Realistic_v1_mc,TrackerAlignmentErrorExtendedRcd,frontier://FrontierProd/CMS_CONDITIONS+MuonDTAPEObjectsExtended_v0_mc,DTAlignmentErrorExtendedRcd,frontier://FrontierProd/CMS_CONDITIONS+MuonCSCAPEObjectsExtended_v0_mc,CSCAlignmentErrorExtendedRcd,frontier://FrontierProd/CMS_CONDITIONS+EcalSamplesCorrelation_mc,EcalSamplesCorrelationRcd,frontier://FrontierProd/CMS_CONDITIONS+EcalPulseShapes_mc,EcalPulseShapesRcd,frontier://FrontierProd/CMS_CONDITIONS+EcalPulseCovariances_mc,EcalPulseCovariancesRcd,frontier://FrontierProd/CMS_CONDITIONS')
+    process.GlobalTag = customiseGlobalTag(process.GlobalTag, globaltag = 'FALL1374_25V4')
     process.GlobalTag.connect   = 'frontier://FrontierProd/CMS_CONDITIONS'
     process.GlobalTag.pfnPrefix = cms.untracked.string('frontier://FrontierProd/')
     for pset in process.GlobalTag.toGet.value():
@@ -7806,7 +7806,7 @@ process.dqmOutput = cms.OutputModule("DQMRootOutputModule",
     fileName = cms.untracked.string("DQMIO.root")
 )
 
-#process.DQMOutput = cms.EndPath( process.dqmOutput )
+# process.DQMOutput = cms.EndPath( process.dqmOutput )
 
 # add specific customizations
 _customInfo = {}
@@ -7817,7 +7817,7 @@ _customInfo['globalTags'][False] = "auto:run2_mc_GRun"
 _customInfo['inputFiles']={}
 _customInfo['inputFiles'][True]  = "file:RelVal_Raw_GRun_DATA.root"
 _customInfo['inputFiles'][False] = "file:RelVal_Raw_GRun_MC.root"
-_customInfo['maxEvents' ]=  150
+_customInfo['maxEvents' ]=  30
 _customInfo['globalTag' ]= "FALL1374_25V4"
 _customInfo['inputFile' ]=  ['file:/nfs-7/userdata/manuelf/data/SMS-T1tttt_2J_mGl-1500_mLSP-100_Tune4C_13TeV-madgraph-tauola__GEN-SIM-RAW__PU20bx25_POSTLS170_V5-v2.root']
 _customInfo['realData'  ]=  False
